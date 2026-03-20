@@ -53,7 +53,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		lastMsg := GetLastBotMsg(chatID)
 		return processVPNSteps(step, text, chatID, c, b, lastMsg)
 	}
-	if strings.HasPrefix(step, "awaiting_scan_") {
+	if strings.HasPrefix(step, "awaiting_scanner_") {
 		lastMsg := GetLastBotMsg(chatID)
 		return processScannerSteps(step, text, chatID, c, b, lastMsg)
 	}
