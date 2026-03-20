@@ -297,7 +297,7 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 		res += fmt.Sprintf("• Dropbear: <code>%s</code>\n", dataFinal.Dropbear)
 	}
 	if dataFinal.SSLTunnel != "" {
-		res += fmt.Sprintf("• SSL Tunnel: <code>%s</code>\n", dataFinal.SSLTunnel)
+		res += fmt.Sprintf("• SSL Tunnel (HAProxy): <code>%s, 80, 8080</code>\n", dataFinal.SSLTunnel)
 	}
 	if dataFinal.Falcon != "" {
 		res += fmt.Sprintf("• Falcon Proxy: <code>%s</code>\n", dataFinal.Falcon)
@@ -324,10 +324,13 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 		res += "\n"
 	}
 
-	if dataFinal.SSHWebSocket {
+	if dataFinal.SSHWebSocket || dataFinal.SSLTunnel != "" {
 		res += "🌐 <b>SSH WEBSOCKET</b>\n"
 		res += "• WS:  <code>ws://" + ip + ":80</code>\n"
 		res += "• WSS: <code>wss://" + ip + ":443</code>\n"
+		if dataFinal.SSLTunnel != "" {
+			res += "• WS CDN: <code>ws://" + ip + ":8080</code>\n"
+		}
 		res += "\n"
 	}
 	res += "━━━━━━━━━━━━━━\n"

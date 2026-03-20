@@ -68,7 +68,7 @@ func handleInfo(c tele.Context, b *tele.Bot) error {
 		active = true
 	}
 	if data.SSLTunnel != "" {
-		info += fmt.Sprintf("📜 <b>SSL Tunnel:</b> puerto <code>%s</code>\n", data.SSLTunnel)
+		info += fmt.Sprintf("📜 <b>SSL Tunnel (HAProxy):</b> puertos <code>%s, 80, 8080</code>\n", data.SSLTunnel)
 		active = true
 	}
 	if len(data.ProxyDT.Ports) > 0 {
