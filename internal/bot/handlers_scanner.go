@@ -45,11 +45,13 @@ func processScannerSteps(step string, text string, chatID int64, c tele.Context,
 	domain := strings.TrimSpace(text)
 	DeleteUserStep(chatID)
 
-	b.Edit(lastMsg, fmt.Sprintf("⏳ <b>Escaneando:</b> <code>%s</code>\n\n<i>Esto puede tardar unos segundos, por favor espera...</i>", domain), tele.ModeHTML)
+	b.Edit(lastMsg, fmt.Sprintf("⏳ <b>Iniciando Escaneo:</b> <code>%s</code>\n\n<i>Verificando herramientas...</i>", domain), tele.ModeHTML)
 
 	go func() {
 		// Asegurar dependencias
 		_ = sys.EnsureScannerDeps()
+
+		b.Edit(lastMsg, fmt.Sprintf("⏳ <b>Escaneando:</b> <code>%s</code>\n\n<i>Esto puede tardar unos segundos, por favor espera...</i>", domain), tele.ModeHTML)
 
 		result, err := sys.RunScanner(domain)
 		markup := &tele.ReplyMarkup{}

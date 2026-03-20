@@ -78,6 +78,12 @@ install_bot() {
     chmod +x /usr/local/bin/depwise-bot
     rm -rf /tmp/BOT-TELEGRAM-VPN
 
+    log_info "Instalando herramientas adicionales de Auditoría (Escaner)..."
+    export GOPATH="$HOME/go"
+    export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+    go install github.com/tomnomnom/assetfinder@latest || log_warn "No se pudo instalar assetfinder automáticamente."
+    go install github.com/projectdiscovery/httpx/cmd/httpx@latest || log_warn "No se pudo instalar httpx automáticamente."
+
     # 4. Servicio Systemd
     log_info "Generando sistema daemon SystemD..."
     cat << EOF > /etc/systemd/system/depwise.service
