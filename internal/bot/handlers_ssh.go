@@ -270,6 +270,14 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 			data.SSHOwners = make(map[string]string)
 		}
 		data.SSHOwners[user] = fmt.Sprintf("%d", chatID)
+
+		if data.SSHTimeUsers == nil {
+			data.SSHTimeUsers = make(map[string]string)
+		}
+		// Calcular fecha de vencimiento (YYYY-MM-DD)
+		expireDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+		data.SSHTimeUsers[user] = expireDate
+
 		if c.Sender() != nil && c.Sender().Username != "" {
 			if data.SSHHandles == nil {
 				data.SSHHandles = make(map[string]string)
