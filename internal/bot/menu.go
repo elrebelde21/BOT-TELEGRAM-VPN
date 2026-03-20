@@ -361,7 +361,12 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 
 	// Comprobar Acceso Público
 	if !data.PublicAccess && !isAdmin(chatID) {
-		textoDenegado := "⛔ <b>ACCESO DENEGADO</b>\n\nEste Bot es privado."
+		textoDenegado := "🔒 <b>BOT PRIVADO / MANTENIMIENTO</b>\n\n" +
+			"Este bot está configurado solo para administradores.\n\n" +
+			"🛒 <b>¿Deseas comprar acceso o un servidor?</b>\n" +
+			"• 📢 <b>Canal:</b> @Depwise2\n" +
+			"• 👤 <b>Soporte Admin:</b> @Dan3651"
+
 		if c.Callback() != nil {
 			return c.Edit(textoDenegado, tele.ModeHTML)
 		}
