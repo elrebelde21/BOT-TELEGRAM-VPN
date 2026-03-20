@@ -1,7 +1,6 @@
 package sys
 
 import (
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -54,73 +53,6 @@ func AutoCleanupLoop(b *tele.Bot) {
 						delete(data.ZivpnUsers, pass)
 						delete(data.ZivpnOwners, pass)
 						delete(data.ZivpnLastActive, pass)
-					}
-				}
-
-				// 3. Limpieza de Usuarios Zombi SSH (12 Horas de inactividad)
-				online, _ := CountOnlineConnections()
-				saID := os.Getenv("SUPER_ADMIN")
-				for user, ownerID := range data.SSHOwners {
-					// Obviar si es del SuperAdmin
-					if ownerID == saID {
-						continue
-					}
-
-					// Si está online, actualizar rastro
-					if _, isOnline := online[user]; isOnline {
-						data.SSHLastActive[user] = time.Now().Format(time.RFC3339)
-						continue
-					}
-
-					// Si no está online, ver cuándo fue la última vez
-					lastStr, exists := data.SSHLastActive[user]
-					if !exists {
-						// Si no existe rastro, inicializar con ahora (dar 12h de gracia)
-						data.SSHLastActive[user] = time.Now().Format(time.RFC3339)
-						continue
-					}
-
-					lastTime, err := time.Parse(time.RFC3339, lastStr)
-					if err == nil {
-						if time.Since(lastTime) > 12*time.Hour {
-							// Borrar Zombi
-							DeleteSSHUser(user)
-							delete(data.SSHOwners, user)
-							delete(data.SSHTimeUsers, user)
-							delete(data.SSHLastActive, user)
-						}
-					}
-				}
-
-				// 4. Limpieza de Usuarios Zombi ZiVPN (12 Horas de inactividad)
-				zivpnHasTraffic := CountZivpnActive()
-				for pass, ownerID := range data.ZivpnOwners {
-					// Obviar si es del SuperAdmin
-					if ownerID == saID {
-						continue
-					}
-
-					if zivpnHasTraffic {
-						// Si hay tráfico activo, actualizar rastro para todas las contraseñas activas
-						data.ZivpnLastActive[pass] = time.Now().Format(time.RFC3339)
-						continue
-					}
-
-					// Si no hay tráfico, revisar antigüedad
-					lastStr, exists := data.ZivpnLastActive[pass]
-					if !exists {
-						data.ZivpnLastActive[pass] = time.Now().Format(time.RFC3339)
-						continue
-					}
-
-					lastTime, err := time.Parse(time.RFC3339, lastStr)
-					if err == nil {
-						if time.Since(lastTime) > 12*time.Hour {
-							vpn.RemoveZivpnUser(pass)
-							delete(data.ZivpnUsers, pass)
-							delete(data.ZivpnOwners, pass)
-							delete(data.ZivpnLastActive, pass)
-						}
 					}
 				}
 
