@@ -38,6 +38,10 @@ func handleInfo(c tele.Context, b *tele.Bot) error {
 		info += "🛰️ <b>ZiVPN UDP:</b> <code>activo</code>\n"
 		active = true
 	}
+	if data.UDPCustom {
+		info += "🛰️ <b>UDP Custom:</b> <code>activo</code>\n"
+		active = true
+	}
 	if data.BadVPN {
 		info += "🎮 <b>BadVPN UDPGW:</b> <code>activo (7300)</code>\n"
 		active = true

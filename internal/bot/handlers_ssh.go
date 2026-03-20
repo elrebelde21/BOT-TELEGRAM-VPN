@@ -289,11 +289,46 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 	res += fmt.Sprintf("⏳ <b>Días:</b> %d\n", days)
 	res += fmt.Sprintf("💻 <b>Límite:</b> %d\n", limit)
 	res += "━━━━━━━━━━━━━━\n"
-	res += fmt.Sprintf("🌐 <b>IP:</b> <code>%s</code>\n", ip)
-	res += "🔌 <b>SSH Port:</b> <code>22</code>\n"
+	res += fmt.Sprintf("🌐 <b>IP Principal:</b> <code>%s</code>\n\n", ip)
+
+	res += "🔌 <b>PUERTOS SSH ACTIVOS</b>\n"
+	res += "• Directo: <code>22</code>\n"
+	if dataFinal.Dropbear != "" {
+		res += fmt.Sprintf("• Dropbear: <code>%s</code>\n", dataFinal.Dropbear)
+	}
+	if dataFinal.SSLTunnel != "" {
+		res += fmt.Sprintf("• SSL Tunnel: <code>%s</code>\n", dataFinal.SSLTunnel)
+	}
+	if dataFinal.Falcon != "" {
+		res += fmt.Sprintf("• Falcon Proxy: <code>%s</code>\n", dataFinal.Falcon)
+	}
+	res += "\n"
+
+	if dataFinal.CloudflareDomain != "" || dataFinal.CloudfrontDomain != "" {
+		res += "🌐 <b>CONEXIONES CDN / SNI</b>\n"
+		if dataFinal.CloudflareDomain != "" {
+			res += fmt.Sprintf("• Cloudflare: <code>%s</code>\n", dataFinal.CloudflareDomain)
+		}
+		if dataFinal.CloudfrontDomain != "" {
+			res += fmt.Sprintf("• Cloudfront: <code>%s</code>\n", dataFinal.CloudfrontDomain)
+		}
+		res += "\n"
+	}
+
+	if dataFinal.SlowDNS.NS != "" {
+		res += "🐢 <b>SLOWDNS</b>\n"
+		res += fmt.Sprintf("• NS: <code>%s</code>\n", dataFinal.SlowDNS.NS)
+		if dataFinal.SlowDNS.Key != "" {
+			res += fmt.Sprintf("• Key: <code>%s</code>\n", dataFinal.SlowDNS.Key)
+		}
+		res += "\n"
+	}
+
 	if dataFinal.SSHWebSocket {
-		res += "🌐 <b>WS:</b>  <code>ws://" + ip + ":80</code>\n"
-		res += "🔒 <b>WSS:</b> <code>wss://" + ip + ":443</code>\n"
+		res += "🌐 <b>SSH WEBSOCKET</b>\n"
+		res += "• WS:  <code>ws://" + ip + ":80</code>\n"
+		res += "• WSS: <code>wss://" + ip + ":443</code>\n"
+		res += "\n"
 	}
 	res += "━━━━━━━━━━━━━━\n"
 
