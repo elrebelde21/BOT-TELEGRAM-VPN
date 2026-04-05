@@ -77,6 +77,7 @@ install_bot() {
     go build -o /usr/local/bin/depwise-bot cmd/depwise/main.go
     chmod +x /usr/local/bin/depwise-bot
     rm -rf /tmp/BOT-TELEGRAM-VPN
+    cd ~
 
     log_info "Instalando herramientas adicionales de Auditoría (Escaner)..."
     export GOPATH="$HOME/go"
