@@ -716,6 +716,21 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_falcon_port":
 		port := text
+
+		data, _ := db.Load()
+		if data.SSLTunnel != "" && (port == "80" || port == "443" || port == "8080" || port == data.SSLTunnel) {
+			markupCancel := &tele.ReplyMarkup{}
+			markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
+			b.Edit(lastMsg, "❌ <b>Puerto en uso por HAProxy (SSL Tunnel).</b>\n\nPor favor, ingresa un puerto diferente:", markupCancel, tele.ModeHTML)
+			return nil
+		}
+		if data.SSHWebSocket && (port == "10015" || port == "2082") {
+			markupCancel := &tele.ReplyMarkup{}
+			markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
+			b.Edit(lastMsg, "❌ <b>Puerto en uso por SSH WebSocket.</b>\n\nPor favor, ingresa un puerto diferente:", markupCancel, tele.ModeHTML)
+			return nil
+		}
+
 		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Instalando Falcon Proxy...</i>", tele.ModeHTML)
@@ -794,6 +809,21 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			b.Edit(lastMsg, "❌ <b>Puerto inválido.</b> Por favor, ingresa solo números (Ej: 8080).", markup, tele.ModeHTML)
 			return nil
 		}
+
+		data, _ := db.Load()
+		if data.SSLTunnel != "" && (port == "80" || port == "443" || port == "8080" || port == data.SSLTunnel) {
+			markupCancel := &tele.ReplyMarkup{}
+			markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
+			b.Edit(lastMsg, "❌ <b>Puerto en uso por HAProxy (SSL Tunnel).</b>\n\nPor favor, ingresa un puerto diferente:", markupCancel, tele.ModeHTML)
+			return nil
+		}
+		if data.SSHWebSocket && (port == "10015" || port == "2082") {
+			markupCancel := &tele.ReplyMarkup{}
+			markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
+			b.Edit(lastMsg, "❌ <b>Puerto en uso por SSH WebSocket.</b>\n\nPor favor, ingresa un puerto diferente:", markupCancel, tele.ModeHTML)
+			return nil
+		}
+
 		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Instalando y configurando ProxyDT...</i>", tele.ModeHTML)
