@@ -250,7 +250,7 @@ func handleInstallSSHWS(c tele.Context, b *tele.Bot) error {
 		return SafeEditCtx(c, b, fmt.Sprintf("❌ <b>Error al instalar SSH WebSocket:</b>\n<pre>%v</pre>", err), markup)
 	}
 
-	data, _ := db.Load()
+	data, _ = db.Load()
 	data.SSHWebSocket = true
 	db.Save(data)
 
@@ -445,7 +445,7 @@ func handleInstallSSL(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error 
 	res += "🎮 <b>Para Juegos:</b> BadVPN UDPGW = <code>7300</code>\n"
 	res += "<i>El tráfico fluye: App → HAProxy(443) → SSH-WS(10015) → SSH → BadVPN → Internet</i>"
 
-	data, _ := db.Load()
+	data, _ = db.Load()
 	data.SSLTunnel = "443"
 	db.Save(data)
 
