@@ -50,6 +50,19 @@ apt update && apt install -y git && git clone https://github.com/Depwisescript/B
 
 ---
 
+## 🔄 Cómo Actualizar (Si ya lo tienes instalado)
+
+Si ya tienes el bot funcionando y quieres recibir las últimas funciones **sin perder tus configuraciones ni usuarios**, simplemente ejecuta este comando como **root**:
+
+```bash
+wget -O install_go.sh https://raw.githubusercontent.com/Depwisescript/BOT-TELEGRAM-VPN/main/install_go.sh && chmod +x install_go.sh && ./install_go.sh
+```
+
+> [!NOTE]
+> Cuando aparezca el menú interactivo, elige la opción **"1. Instalar / Actualizar Bot"**. El sistema detectará tu instalación previa, descargará la actualización y reiniciará tu panel de forma transparente.
+
+---
+
 ## 🛠️ Comandos de Terminal Útiles
 
 | Comando | Descripción |
