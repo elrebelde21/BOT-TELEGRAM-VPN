@@ -59,6 +59,14 @@ func AutoCleanupLoop(b *tele.Bot) {
 					}
 				}
 
+				// Revisar Xray - auto-expiración por fecha
+				for uid, user := range data.XrayUsers {
+					if now > user.Expire {
+						vpn.RemoveXrayUser(uid)
+						delete(data.XrayUsers, uid)
+					}
+				}
+
 				return nil
 			})
 

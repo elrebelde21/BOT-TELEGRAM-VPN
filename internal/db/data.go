@@ -42,6 +42,20 @@ type ConfigData struct {
 	SysTXLast        uint64               `json:"sys_tx_last"`
 	SysRXTotal       uint64               `json:"sys_rx_total"`
 	SysTXTotal       uint64               `json:"sys_tx_total"`
+	Xray             XrayConfig           `json:"xray"`
+	XrayUsers        map[string]XrayUser  `json:"xray_users"`        // uuid -> XrayUser data
+}
+
+type XrayConfig struct {
+	Installed bool   `json:"installed"`
+	Port      int    `json:"port"` // usually 10002
+}
+
+type XrayUser struct {
+	Alias  string `json:"alias"`
+	Expire string `json:"expire"` // YYYY-MM-DD
+	Owner  string `json:"owner"`  // Chat ID
+	Handle string `json:"handle"`
 }
 
 type AdminInfo struct {
@@ -125,6 +139,9 @@ func loadUnlocked() (*ConfigData, error) {
 	}
 	if data.SSHHandles == nil {
 		data.SSHHandles = make(map[string]string)
+	}
+	if data.XrayUsers == nil {
+		data.XrayUsers = make(map[string]XrayUser)
 	}
 	if data.ZivpnHandles == nil {
 		data.ZivpnHandles = make(map[string]string)
@@ -219,5 +236,7 @@ func defaultData() *ConfigData {
 		SSHHandles:      make(map[string]string),
 		ZivpnHandles:    make(map[string]string),
 		PublicScanner:   true,
+		XrayUsers:       make(map[string]XrayUser),
 	}
 }
+

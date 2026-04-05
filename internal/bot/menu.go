@@ -193,6 +193,9 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "install_scanner_deps"}, func(c tele.Context) error {
 		return handleInstallScannerDeps(c, b)
 	})
+	b.Handle(&tele.Btn{Unique: "install_xray"}, func(c tele.Context) error {
+		return handleInstallXray(c, b, c.Message())
+	})
 
 	// Sub-Menús de Protocolos
 	b.Handle(&tele.Btn{Unique: "submenu_slowdns"}, func(c tele.Context) error { return handleSubMenuSlowDNS(c, b) })
@@ -204,6 +207,8 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "submenu_proxydt"}, func(c tele.Context) error { return handleSubMenuProxyDT(c, b) })
 	b.Handle(&tele.Btn{Unique: "submenu_udpcustom"}, func(c tele.Context) error { return handleSubMenuUDPCustom(c, b) })
 	b.Handle(&tele.Btn{Unique: "submenu_sshws"}, func(c tele.Context) error { return handleSubMenuSSHWS(c, b) })
+	b.Handle(&tele.Btn{Unique: "submenu_xray"}, func(c tele.Context) error { return handleSubMenuXray(c, b) })
+	b.Handle(&tele.Btn{Unique: "manage_xray_users"}, func(c tele.Context) error { return handleManageXrayUsers(c, b) })
 	b.Handle(&tele.Btn{Unique: "protocol_diag"}, func(c tele.Context) error { return handleProtocolDiag(c, b) })
 	b.Handle(&tele.Btn{Unique: "menu_protocols"}, func(c tele.Context) error { return handleMenuProtocols(c, b) })
 
@@ -218,11 +223,13 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "uninstall_udpcustom"}, func(c tele.Context) error { return handleUninstallUDPCustom(c, b) })
 	b.Handle(&tele.Btn{Unique: "install_sshws"}, func(c tele.Context) error { return handleInstallSSHWS(c, b) })
 	b.Handle(&tele.Btn{Unique: "uninstall_sshws"}, func(c tele.Context) error { return handleUninstallProtocol(c, b, "SSH WebSocket") })
+	b.Handle(&tele.Btn{Unique: "uninstall_xray"}, func(c tele.Context) error { return handleUninstallProtocol(c, b, "Xray") })
 
 	// Callbacks Dinámicos (One-Tap Selection)
 	b.Handle("\fed_user:", func(c tele.Context) error { return handleEditSelection(c, b) })
 	b.Handle("\fdel_confirm:", func(c tele.Context) error { return handleDeleteSelection(c, b) })
 	b.Handle("\fdel_adm_exec:", func(c tele.Context) error { return handleDelAdminExec(c, b) })
+	b.Handle("\fdel_xray_exec", func(c tele.Context) error { return handleDeleteXrayExec(c, b) })
 
 	// Ajustes Pro
 	b.Handle(&tele.Btn{Unique: "toggle_public_access"}, func(c tele.Context) error { return handleTogglePublicAccess(c, b) })
@@ -262,6 +269,9 @@ func StartBot() {
 	})
 	b.Handle(&tele.Btn{Unique: "crear_zivpn"}, func(c tele.Context) error {
 		return handleCrearZivpn(c, b)
+	})
+	b.Handle(&tele.Btn{Unique: "crear_xray"}, func(c tele.Context) error {
+		return handleCrearXray(c, b)
 	})
 	b.Handle(&tele.Btn{Unique: "ssh_rnd_pass"}, func(c tele.Context) error {
 		return handleRandomPass(c, b)
@@ -482,12 +492,18 @@ func menuCrearMarkup() *tele.ReplyMarkup {
 	menu := &tele.ReplyMarkup{}
 	btnSSH := menu.Data("👤 Cliente SSH", "crear_ssh")
 	btnZivpn := menu.Data("🛰️ Acceso ZIVPN", "crear_zivpn")
+	btnXray := menu.Data("💎 VMess (Xray)", "crear_xray")
 	btnBack := menu.Data("🔙 Volver", "back_main")
 
-	menu.Inline(
-		menu.Row(btnSSH),
-		menu.Row(btnZivpn),
-		menu.Row(btnBack),
-	)
+	data, _ := db.Load()
+	var rows []tele.Row
+	rows = append(rows, menu.Row(btnSSH))
+	rows = append(rows, menu.Row(btnZivpn))
+	if data.Xray.Installed {
+		rows = append(rows, menu.Row(btnXray))
+	}
+	rows = append(rows, menu.Row(btnBack))
+
+	menu.Inline(rows...)
 	return menu
 }

@@ -57,6 +57,10 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		lastMsg := GetLastBotMsg(chatID)
 		return processScannerSteps(step, text, chatID, c, b, lastMsg)
 	}
+	if strings.HasPrefix(step, "awaiting_xray_") {
+		lastMsg := GetLastBotMsg(chatID)
+		return processXraySteps(step, text, chatID, c, b, lastMsg)
+	}
 
 	lastMsg := GetLastBotMsg(chatID)
 	textLower := strings.ToLower(strings.TrimSpace(text))

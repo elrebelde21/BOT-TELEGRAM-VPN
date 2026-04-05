@@ -20,6 +20,7 @@
 ### 🛠️ Gestión de Protocolos (All-in-One)
 - **SSH/Dropbear/SSL Tunnel:** Gestión completa de cuentas con límites de conexión.
 - **SlowDNS:** Instalación y configuración de túneles DNS.
+- **Xray (VMess):** Protocolo de última generación sobre WebSocket compatible con Cloudflare y HAProxy.
 - **ZiVPN & UDP Custom:** Soporte para protocolos de gaming y bypass robusto.
 - **ProxyDT:** Integración con ProxyDT Cracked para túneles HTTP estables.
 - **Falcon Proxy:** Proxy de alto rendimiento integrado.

@@ -30,6 +30,7 @@ func handleMenuProtocols(c tele.Context, b *tele.Bot) error {
 	btnSSL := markup.Data("📜 SSL Tunnel", "submenu_ssl")
 	btnDropbear := markup.Data("🐻 Dropbear", "submenu_dropbear")
 	btnSSHWS := markup.Data("🌐 SSH WebSocket", "submenu_sshws")
+	btnXray := markup.Data("💎 Xray (VMess)", "submenu_xray")
 	btnScannerDeps := markup.Data("🛠️ Instalar Herramientas Escaner", "install_scanner_deps")
 	btnCancel := markup.Data("🔙 Volver", "back_main")
 
@@ -38,7 +39,7 @@ func handleMenuProtocols(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnBadVPN, btnUDPCustom),
 		markup.Row(btnProxy, btnFalcon),
 		markup.Row(btnSSL, btnDropbear),
-		markup.Row(btnSSHWS),
+		markup.Row(btnSSHWS, btnXray),
 		markup.Row(markup.Data("🛡️ Diagnóstico de Red", "protocol_diag")),
 		markup.Row(btnScannerDeps),
 		markup.Row(btnCancel),
@@ -202,6 +203,29 @@ func handleSubMenuDropbear(c tele.Context, b *tele.Bot) error {
 	return SafeEditCtx(c, b, texto, markup)
 }
 
+func handleSubMenuXray(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	status := "❌ Desinstalado"
+	if data.Xray.Installed {
+		status = "✅ Instalado"
+	}
+
+	markup := &tele.ReplyMarkup{}
+	btnInst := markup.Data("📥 Instalar", "install_xray")
+	btnManage := markup.Data("👥 Gestionar Usuarios", "manage_xray_users")
+	btnUninst := markup.Data("🗑️ Desinstalar", "uninstall_xray")
+	btnBack := markup.Data("🔙 Volver", "menu_protocols")
+
+	if data.Xray.Installed {
+		markup.Inline(markup.Row(btnManage), markup.Row(btnUninst), markup.Row(btnBack))
+	} else {
+		markup.Inline(markup.Row(btnInst), markup.Row(btnBack))
+	}
+
+	texto := fmt.Sprintf("💎 <b>Gestión de Xray (VMess)</b>\n\n📊 <b>Estado:</b> %s\n⚙️ <b>Puerto Interno:</b> <code>10002</code>\n\nEste protocolo utiliza <b>VMess sobre WebSocket</b> y está diseñado para funcionar detrás de Cloudflare y HAProxy.\n\n¿Qué deseas hacer?", status)
+	return SafeEditCtx(c, b, texto, markup)
+}
+
 func handleSubMenuSSHWS(c tele.Context, b *tele.Bot) error {
 	data, _ := db.Load()
 	status := "❌ Desinstalado"
@@ -306,6 +330,10 @@ func handleUninstallProtocol(c tele.Context, b *tele.Bot, proto string) error {
 	case "ProxyDT":
 		err = vpn.RemoveProxyDT()
 		data.ProxyDT.Ports = make(map[string]string)
+	case "Xray":
+		err = vpn.RemoveXray()
+		data.Xray.Installed = false
+		data.XrayUsers = make(map[string]db.XrayUser)
 	}
 
 	if err != nil {
@@ -461,6 +489,58 @@ func handleInstallDropbear(c tele.Context, b *tele.Bot, lastMsg *tele.Message) e
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
 
 	b.Edit(lastMsg, "🐻 <b>Instalador de Dropbear</b>\n\n⚙️ <i>Escribe los puertos de escucha separados por coma (Ej: 143,109):</i>", markup, tele.ModeHTML)
+	return nil
+}
+
+func handleInstallXray(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
+	data, _ := db.Load()
+
+	// Candados de seguridad
+	if data.CloudflareDomain == "" {
+		markup := &tele.ReplyMarkup{}
+		markup.Inline(
+			markup.Row(markup.Data("⚙️ Ajustes Pro", "menu_admins")),
+			markup.Row(markup.Data("🔙 Volver", "submenu_xray")),
+		)
+		b.Edit(lastMsg, "⚠️ <b>Requisito Faltante</b>\n\nNo puedes instalar <b>Xray</b> sin antes configurar un <b>Dominio de Cloudflare</b> en los <i>Ajustes Pro</i> del menú administrador.\n\nEl protocolo VMess WebSocket requiere un dominio para generar los links de conexión.", markup, tele.ModeHTML)
+		return nil
+	}
+
+	if data.SSLTunnel == "" {
+		markup := &tele.ReplyMarkup{}
+		markup.Inline(
+			markup.Row(markup.Data("📜 SSL Tunnel", "submenu_ssl")),
+			markup.Row(markup.Data("🔙 Volver", "submenu_xray")),
+		)
+		b.Edit(lastMsg, "⚠️ <b>Requisito Faltante</b>\n\nNo puedes instalar <b>Xray</b> sin tener <b>HAProxy (SSL Tunnel)</b> instalado. HAProxy es el encargado de recibir el tráfico en el puerto 443 y redirigirlo a Xray.", markup, tele.ModeHTML)
+		return nil
+	}
+
+	b.Edit(lastMsg, "⏳ <b>Instalando Xray-core...</b>\n\n<i>Descargando núcleo Xray y configurando VMess sobre WebSocket en puerto 10002.\nEsto puede tardar unos segundos...</i>", tele.ModeHTML)
+
+	err := vpn.InstallXray()
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("🔙 Volver", "submenu_xray")))
+
+	if err != nil {
+		b.Edit(lastMsg, fmt.Sprintf("❌ <b>Error al instalar Xray:</b>\n<pre>%v</pre>", err), markup, tele.ModeHTML)
+		return nil
+	}
+
+	data, _ = db.Load()
+	data.Xray.Installed = true
+	data.Xray.Port = 10002
+	db.Save(data)
+
+	res := "✅ <b>Xray (VMess) Instalado Correctamente</b>\n"
+	res += "━━━━━━━━━━━━━━\n"
+	res += "⚙️ <b>Protocolo:</b> <code>VMess + WebSocket</code>\n"
+	res += "⚙️ <b>Puerto Interno:</b> <code>10002</code>\n"
+	res += "🌍 <b>Dominio:</b> <code>" + data.CloudflareDomain + "</code>\n"
+	res += "━━━━━━━━━━━━━━\n"
+	res += "<i>Ahora puedes comenzar a gestionar usuarios desde el menú de Xray.</i>"
+
+	b.Edit(lastMsg, res, markup, tele.ModeHTML)
 	return nil
 }
 
