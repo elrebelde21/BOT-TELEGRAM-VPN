@@ -38,6 +38,10 @@ type ConfigData struct {
 	MaxLimitPublic   int                  `json:"max_limit_public"`  // Max device limit for public
 	MaxDaysAdmin     int                  `json:"max_days_admin"`    // Max days for admin user creation
 	MaxLimitAdmin    int                  `json:"max_limit_admin"`   // Max device limit for admins
+	SysRXLast        uint64               `json:"sys_rx_last"`
+	SysTXLast        uint64               `json:"sys_tx_last"`
+	SysRXTotal       uint64               `json:"sys_rx_total"`
+	SysTXTotal       uint64               `json:"sys_tx_total"`
 }
 
 type AdminInfo struct {

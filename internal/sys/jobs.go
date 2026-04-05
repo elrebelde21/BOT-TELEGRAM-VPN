@@ -33,6 +33,9 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 		// 1. Limpieza de usuarios vencidos de forma periódica
 		if tick >= 9 { // Cada 60-70 segundos aprox
+			// Guardar el tráfico en DB para que persista tras reiniciar la VPS
+			GetGlobalTraffic()
+
 			db.Update(func(data *db.ConfigData) error {
 				now := time.Now().Format("2006-01-02")
 

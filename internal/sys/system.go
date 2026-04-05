@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
 )
 
 // PerformFullCleanup realiza una limpieza profunda del SSD
@@ -54,7 +56,7 @@ func GetGlobalTraffic() (float64, float64) {
 	}
 
 	lines := strings.Split(string(data), "\n")
-	var totalRX, totalTX uint64
+	var currentRX, currentTX uint64
 
 	for _, line := range lines {
 		if !strings.Contains(line, ":") {
@@ -74,12 +76,34 @@ func GetGlobalTraffic() (float64, float64) {
 		if len(fields) >= 9 {
 			rx, _ := strconv.ParseUint(fields[0], 10, 64)
 			tx, _ := strconv.ParseUint(fields[8], 10, 64)
-			totalRX += rx
-			totalTX += tx
+			currentRX += rx
+			currentTX += tx
 		}
 	}
 
-	gbRX := float64(totalRX) / 1024 / 1024 / 1024
-	gbTX := float64(totalTX) / 1024 / 1024 / 1024
-	return gbRX, gbTX
+	var finalRX, finalTX float64
+
+	_ = db.Update(func(d *db.ConfigData) error {
+		// RX logic: si el valor actual es menor al último registrado, hubo un reinicio
+		if currentRX < d.SysRXLast {
+			d.SysRXTotal += currentRX
+		} else {
+			d.SysRXTotal += (currentRX - d.SysRXLast)
+		}
+		d.SysRXLast = currentRX
+
+		// TX logic:
+		if currentTX < d.SysTXLast {
+			d.SysTXTotal += currentTX
+		} else {
+			d.SysTXTotal += (currentTX - d.SysTXLast)
+		}
+		d.SysTXLast = currentTX
+
+		finalRX = float64(d.SysRXTotal) / 1024 / 1024 / 1024
+		finalTX = float64(d.SysTXTotal) / 1024 / 1024 / 1024
+		return nil
+	})
+
+	return finalRX, finalTX
 }
