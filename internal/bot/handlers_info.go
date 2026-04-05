@@ -148,7 +148,7 @@ func handleMenuEliminar(c tele.Context, b *tele.Bot) error {
 	sa, _ := strconv.ParseInt(superAdmin, 10, 64)
 	isSA := chatID == sa
 
-	res := "🗑️ <b>ELIMINAR CUENTA (SSH/ZiVPN)</b>\n"
+	res := "🗑️ <b>ELIMINAR CUENTAS (SSH/VPN/XRAY)</b>\n"
 	res += "━━━━━━━━━━━━━━\n"
 
 	count := 0
@@ -175,6 +175,19 @@ func handleMenuEliminar(c tele.Context, b *tele.Bot) error {
 				res += fmt.Sprintf("🔑 <code>%s</code> (%s)\n", pass, handle)
 			} else {
 				res += fmt.Sprintf("🔑 <code>%s</code>\n", pass)
+			}
+			count++
+		}
+	}
+
+	// Listar Xray
+	res += "\n💎 <b>Cuentas VMess (Xray):</b>\n"
+	for uid, user := range data.XrayUsers {
+		if isSA || user.Owner == fmt.Sprintf("%d", chatID) {
+			if user.Handle != "" {
+				res += fmt.Sprintf("👤 <code>%s</code> (%s)\n", user.Alias, user.Handle)
+			} else {
+				res += fmt.Sprintf("👤 <code>%s</code>\n", user.Alias)
 			}
 			count++
 		}
@@ -242,7 +255,27 @@ func processDeleteSteps(text string, chatID int64, c tele.Context, b *tele.Bot) 
 		return handleMenuEliminar(c, b)
 	}
 
-	// 3. No encontrado
+	// 3. Identificar si es Xray (Por Alias o UUID)
+	for uid, user := range data.XrayUsers {
+		if strings.EqualFold(user.Alias, target) || uid == target {
+			if !isSA && user.Owner != fmt.Sprintf("%d", chatID) {
+				_, err := SafeEdit(chatID, b, lastMsg, "⛔ <b>No tienes permiso para eliminar esta cuenta Xray.</b>", nil)
+				return err
+			}
+
+			// Borrar del núcleo y DB
+			_ = vpn.RemoveXrayUser(uid)
+			_ = db.Update(func(d *db.ConfigData) error {
+				delete(d.XrayUsers, uid)
+				return nil
+			})
+
+			_ = c.Respond(&tele.CallbackResponse{Text: "Cuenta Xray eliminada.", ShowAlert: false})
+			return handleMenuEliminar(c, b)
+		}
+	}
+
+	// 4. No encontrado
 	_, err := SafeEdit(chatID, b, lastMsg, "❌ <b>Cuenta no encontrada o no tienes acceso.</b>\n\nVerifica el nombre o password e intenta de nuevo:", nil)
 	return err
 }
