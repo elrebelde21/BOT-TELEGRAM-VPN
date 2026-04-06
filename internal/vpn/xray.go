@@ -1,14 +1,19 @@
 package vpn
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 const xrayConfigPath = "/usr/local/etc/xray/config.json"
+const xrayAccessLog = "/var/log/xray/access.log"
 
 // InstallXray instala el núcleo de Xray y configura el archivo JSON inicial
 func InstallXray() error {
@@ -21,9 +26,13 @@ func InstallXray() error {
 	}
 
 	// 2. Crear configuración base de VMess WS
+	// Asegurar que el directorio de logs exista
+	os.MkdirAll(filepath.Dir(xrayAccessLog), 0755)
+
 	baseConfig := map[string]interface{}{
 		"log": map[string]interface{}{
 			"loglevel": "warning",
+			"access":   xrayAccessLog,
 		},
 		"inbounds": []map[string]interface{}{
 			{
@@ -83,6 +92,35 @@ func RemoveXray() error {
 	exec.Command("bash", "-c", "bash -c \"$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)\" @ remove").Run()
 	os.RemoveAll("/usr/local/etc/xray")
 	return nil
+}
+
+// EnsureXrayAccessLog verifica que el access log esté habilitado en la config
+// existente. Si no lo está, lo agrega y reinicia Xray. Útil para instalaciones
+// anteriores a esta funcionalidad.
+func EnsureXrayAccessLog() error {
+	cfg, err := loadXrayConfig()
+	if err != nil {
+		return err
+	}
+
+	logSection, ok := cfg["log"].(map[string]interface{})
+	if !ok {
+		logSection = make(map[string]interface{})
+		cfg["log"] = logSection
+	}
+
+	// Si ya tiene el access log configurado, no hacer nada
+	if existing, ok := logSection["access"].(string); ok && existing != "" {
+		return nil
+	}
+
+	// Asegurar directorio de logs
+	os.MkdirAll(filepath.Dir(xrayAccessLog), 0755)
+
+	logSection["access"] = xrayAccessLog
+	cfg["log"] = logSection
+
+	return saveXrayConfig(cfg)
 }
 
 // loadXrayConfig lee la config JSON existente
@@ -194,4 +232,54 @@ func GenerateVmessLink(alias, uuid, domain string) string {
 	raw, _ := json.Marshal(vmessObj)
 	encoded := base64.StdEncoding.EncodeToString(raw)
 	return "vmess://" + encoded
+}
+
+// GetXrayOnlineUsers retorna los emails de usuarios VMess activos en los últimos 60 segundos
+// leyendo el access log de Xray.
+// Formato de log: 2026/04/06 18:30:00 1.2.3.4:12345 accepted tcp:8.8.8.8:443 [vmess >> direct] email: user@alias
+func GetXrayOnlineUsers() []string {
+	file, err := os.Open(xrayAccessLog)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	cutoff := time.Now().Add(-60 * time.Second)
+	activeEmails := make(map[string]bool)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Buscar "email:" en la línea
+		emailIdx := strings.Index(line, "email: ")
+		if emailIdx == -1 {
+			continue
+		}
+
+		// Parsear timestamp al inicio de la línea (formato: 2026/04/06 18:30:00)
+		if len(line) < 19 {
+			continue
+		}
+		tsStr := line[:19]
+		ts, err := time.ParseInLocation("2006/01/02 15:04:05", tsStr, time.Local)
+		if err != nil {
+			continue
+		}
+
+		if ts.Before(cutoff) {
+			continue
+		}
+
+		email := strings.TrimSpace(line[emailIdx+7:])
+		if email != "" {
+			activeEmails[email] = true
+		}
+	}
+
+	var result []string
+	for email := range activeEmails {
+		result = append(result, email)
+	}
+	return result
 }

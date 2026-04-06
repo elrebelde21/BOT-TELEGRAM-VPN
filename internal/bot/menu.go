@@ -10,6 +10,7 @@ import (
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/sys"
+	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/vpn"
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -287,6 +288,13 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "start_scanner_prompt"}, func(c tele.Context) error {
 		return handleStartScanPrompt(c, b)
 	})
+
+	// Parchar config de Xray existente para habilitar access log (monitor online)
+	if initData, _ := db.Load(); initData.Xray.Installed {
+		if err := vpn.EnsureXrayAccessLog(); err != nil {
+			log.Printf("Aviso: No se pudo habilitar access log de Xray: %v", err)
+		}
+	}
 
 	// Iniciar hilo de auto-limpieza (Rutina concurrente)
 	go sys.AutoCleanupLoop(b)

@@ -112,6 +112,8 @@ func handleInfo(c tele.Context, b *tele.Bot) error {
 func handleMenuOnline(c tele.Context, b *tele.Bot) error {
 	sshOnline := sys.GetOnlineUsers()
 	zivpnOnline := sys.GetZivpnOnline()
+	xrayOnline := vpn.GetXrayOnlineUsers()
+	data, _ := db.Load()
 
 	res := "📊 <b>MONITOR DE CONEXIONES</b>\n\n"
 
@@ -131,6 +133,23 @@ func handleMenuOnline(c tele.Context, b *tele.Bot) error {
 		}
 	} else {
 		res += "<i>Sin sesiones activas.</i>\n"
+	}
+
+	res += "\n💎 <b>V2RAY / XRAY (VMess):</b>\n"
+	if len(xrayOnline) > 0 {
+		for _, email := range xrayOnline {
+			// Buscar alias del usuario en la DB por el email
+			alias := email
+			for _, user := range data.XrayUsers {
+				if user.Alias == email || user.Alias+"@vmess" == email {
+					alias = user.Alias
+					break
+				}
+			}
+			res += fmt.Sprintf("👤 %s\n", alias)
+		}
+	} else {
+		res += "<i>Sin conexiones activas.</i>\n"
 	}
 
 	markup := &tele.ReplyMarkup{}
