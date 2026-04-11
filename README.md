@@ -25,16 +25,16 @@
 - **ProxyDT:** Integración con ProxyDT Cracked para túneles HTTP estables.
 - **Falcon Proxy:** Proxy de alto rendimiento integrado.
 
-### 🛡️ Administración Pro (Panel de Control)
-- **Ajustes Pro:** Panel administrativo avanzado con control de acceso público/privado.
-- **Mensaje Global (Broadcast):** Envía anuncios a todos tus usuarios con reportes en tiempo real.
-- **Gestión de Admins:** Agrega o quita administradores directamente desde el bot.
-- **Dominios CF/Cloudfront:** Integración nativa con dominios de CDN.
+### 🛡️ Administración Pro y Utilidades
+- **Ajustes Pro y Auto-Reboot:** Panel interno con control de estado, configuración de accesos públicos/privados y **reinicio automático diario** para limpiar procesos huérfanos.
+- **Mensaje Global (Broadcast):** Envía anuncios masivos a todos los usuarios.
+- **Monitoreo en Tiempo Real:** Visualización en vivo de métricas de VPS (Uptime, Consumo) y escáner de red para buscar conexiones activas (SSH, ZiVPN, Xray).
+- **Gestión Avanzada:** Soporte nativo para dominios Cloudflare (CF) y Cloudfront con autogeneración de payloads.
 
 ### 🧹 Mantenimiento Inteligente
-- **Persistencia de Tráfico:** Conservación ininterrumpida de métricas de red y ancho de banda, garantizando que no se pierdan datos al reiniciar el servidor.
-- **Deep System Cleanup:** Botón de un solo clic para liberar espacio en el SSD (Apt, Logs, Caché de Go).
-- **Auto-Cleanup Loop:** Monitoreo constante de expiraciones y limpieza de sistema.
+- **Persistencia de Datos Inquebrantable:** Tu tráfico de red y configuraciones de usuario están a salvo; no se pierden ni siquiera ante un reinicio forzado del servidor (OOM o `reboot`).
+- **Resiliencia de Servicios (Xray & HAProxy):** Recuperación automática de los protocolos mediante políticas avanzadas de systemd (Restart=always).
+- **Deep System Cleanup:** Botón de un solo clic para liberar cuellos de botella de memoria (cachés, logs pesados, paquetes huérfanos).
 
 ---
 
@@ -47,31 +47,33 @@ apt update && apt install -y git && git clone https://github.com/Depwisescript/B
 ```
 
 > [!IMPORTANT]
-> El instalador configurará automáticamente el entorno Go, compilará el bot y lo registrará como un servicio de sistema (SystemD) para que siempre esté activo.
+> El instalador configurará automáticamente dependencias clave, el entorno de `Go`, compilará el código y desplegará un servicio estructurado (Systemd) asegurando encendido automático 24/7.
 
 ---
 
-## 🔄 Cómo Actualizar (Si ya lo tienes instalado)
+## 🔄 Cómo Actualizar
 
-Si ya tienes el bot funcionando y quieres recibir las últimas funciones **sin perder tus configuraciones ni usuarios**, simplemente ejecuta este comando como **root**:
+Si ya tienes el bot funcionando y quieres recibir parches de seguridad y últimas funciones **sin perder usuarios ni configuraciones**, ejecuta:
 
 ```bash
 wget -O install_go.sh https://raw.githubusercontent.com/Depwisescript/BOT-TELEGRAM-VPN/main/install_go.sh && chmod +x install_go.sh && ./install_go.sh
 ```
-
 > [!NOTE]
-> Cuando aparezca el menú interactivo, elige la opción **"1. Instalar / Actualizar Bot"**. El sistema detectará tu instalación previa, descargará la actualización y reiniciará tu panel de forma transparente.
+> Al mostrarse el menú en terminal, elige la opción **"1. Instalar / Actualizar Bot"**. El módulo detectará tus datos y simplemente refrescará el código base.
 
 ---
 
-## 🛠️ Comandos de Terminal Útiles
+## 🛠️ Solución de Problemas (Troubleshooting)
 
-| Comando | Descripción |
-| :--- | :--- |
-| `systemctl restart depwise` | Reiniciar el servicio del bot |
-| `systemctl status depwise` | Ver el estado actual del bot |
-| `journalctl -u depwise -f` | Ver los logs en tiempo real |
-| `df -h` | Verificar espacio en SSD |
+Si te encuentras con algún problema o la VPS no responde a un protocolo, revisa esta tabla:
+
+| Síntoma / Problema | Causa Probable | Solución Recomendada (Terminal) |
+| :--- | :--- | :--- |
+| **El bot no responde en Telegram** | Fuga de memoria (OOM) mató el proceso o Token inválido | Verifica si está corriendo: `systemctl status depwise`. Reinícialo: `systemctl restart depwise`. |
+| **Xray/VMess no conecta** | HAProxy o Xray no iniciaron o el dominio Cloudflare no es válido (TLS error). | Revisa HAProxy: `systemctl status haproxy`. Reinstala Xray desde el menú principal de utilidades del bot. |
+| **La VPS se siente muy lenta** | Demasiada carga o memoria RAM saturada (sin swap). | Activa la opción **"Auto Reboot"** en el panel PRO del bot (ej: 03:00) o presiona *"Deep System Cleanup"*. |
+| **Pérdida de historial de tráfico** | Apagado violento del servidor antes de grabar los datos de los primeros 60s. | No hacer hard-reset continuo. El bot automáticamente guarda el tráfico global cada ~60 segundos en caché. |
+| **Problemas de puertos al instalar** | Un proceso antiguo (ej. Python, Dropbear previo) ocupa el puerto deseado. | Revisa con `netstat -tulnp`. Puedes matar el proceso usando `kill -9 PID`. |
 
 ---
 
