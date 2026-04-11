@@ -643,7 +643,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Dominio Cloudfront actualizado:</b> <code>%s</code>", domain), markup, tele.ModeHTML)
 		return nil
 
-	case "awaiting_reboot_time":
+	case "awaiting_vpn_reboot_time":
 		// Validar formato HH:MM
 		match, _ := regexp.MatchString(`^([01][0-9]|2[0-3]):[0-5][0-9]$`, text)
 		if !match {

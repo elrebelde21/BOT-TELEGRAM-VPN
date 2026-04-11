@@ -397,7 +397,7 @@ func handleToggleAutoReboot(c tele.Context, b *tele.Bot) error {
 
 func handleEditRebootTimePrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	SetUserStep(chatID, "awaiting_reboot_time")
+	SetUserStep(chatID, "awaiting_vpn_reboot_time")
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_autoreboot")))
 	return SafeEditCtx(c, b, "🕒 <b>Programar Hora de Reinicio</b>\n\n✏️ <i>Escribe la hora en formato 24h (HH:MM):</i>\n\nEjemplo: <code>04:30</code>", markup)
