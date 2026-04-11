@@ -110,6 +110,28 @@ func GetSystemStats() VPSInfo {
 		}
 	}
 
+	// 5. Uptime (usando /proc/uptime)
+	outUptime, err := exec.Command("awk", "{print $1}", "/proc/uptime").Output()
+	if err == nil {
+		uptimeSecStr := strings.TrimSpace(string(outUptime))
+		uptimeSecFloat, _ := strconv.ParseFloat(uptimeSecStr, 64)
+		uptimeSecs := int(uptimeSecFloat)
+		
+		days := uptimeSecs / (24 * 3600)
+		uptimeSecs %= (24 * 3600)
+		hours := uptimeSecs / 3600
+		uptimeSecs %= 3600
+		minutes := uptimeSecs / 60
+		
+		if days > 0 {
+			info.UptimeStr = fmt.Sprintf("%dd, %dh, %dm", days, hours, minutes)
+		} else {
+			info.UptimeStr = fmt.Sprintf("%dh, %dm", hours, minutes)
+		}
+	} else {
+		info.UptimeStr = "Desconocido"
+	}
+
 	return info
 }
 
