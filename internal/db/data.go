@@ -45,7 +45,10 @@ type ConfigData struct {
 	SysRXTotal       uint64               `json:"sys_rx_total"`
 	SysTXTotal       uint64               `json:"sys_tx_total"`
 	Xray             XrayConfig           `json:"xray"`
-	XrayUsers        map[string]XrayUser  `json:"xray_users"`        // uuid -> XrayUser data
+	XrayUsers        map[string]XrayUser  `json:"xray_users"` // uuid -> XrayUser data
+	AutoReboot       bool                 `json:"auto_reboot"`
+	RebootTime       string               `json:"reboot_time"` // HH:MM
+	LastRebootDate   string               `json:"last_reboot_date"`
 }
 
 type XrayConfig struct {
@@ -255,6 +258,8 @@ func defaultData() *ConfigData {
 		ZivpnHandles:    make(map[string]string),
 		PublicScanner:   true,
 		XrayUsers:       make(map[string]XrayUser),
+		AutoReboot:      false,
+		RebootTime:      "03:00",
 	}
 }
 

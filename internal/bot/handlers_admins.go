@@ -40,6 +40,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 	btnScanToggle := markup.Data("🔍 Escaner Público: "+scanPubStatus, "toggle_public_scanner")
 
 	btnReboot := markup.Data("🔄 Reiniciar VPS", "reboot_vps_confirm")
+	btnAutoReboot := markup.Data("🕒 Auto Reboot", "menu_autoreboot")
 	btnBack := markup.Data("🔙 Volver", "back_main")
 
 	btnQuotas := markup.Data("📊 Cuotas Creación", "edit_quotas")
@@ -51,7 +52,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnCloudflare, btnCloudfront),
 		markup.Row(btnBanner, btnQuotas),
 		markup.Row(btnReset, btnScanToggle),
-		markup.Row(btnReboot),
+		markup.Row(btnAutoReboot, btnReboot),
 		markup.Row(btnBack),
 	)
 
@@ -355,4 +356,49 @@ func handleTogglePublicScanner(c tele.Context, b *tele.Bot) error {
 		return nil
 	})
 	return handleMenuAdmins(c, b)
+}
+
+func handleAutoRebootMenu(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	status := "❌ Desactivado"
+	if data.AutoReboot {
+		status = "✅ Activado"
+	}
+
+	markup := &tele.ReplyMarkup{}
+	btnToggle := markup.Data("🔄 Switch: "+status, "toggle_autoreboot")
+	btnTime := markup.Data("🕒 Definir Hora: "+data.RebootTime, "edit_reboot_time")
+	btnBack := markup.Data("🔙 Volver", "menu_admins")
+
+	markup.Inline(
+		markup.Row(btnToggle),
+		markup.Row(btnTime),
+		markup.Row(btnBack),
+	)
+
+	texto := "🕒 <b>CONFIGURACIÓN DE AUTO-REINICIO</b>\n"
+	texto += "━━━━━━━━━━━━━━\n"
+	texto += "<i>El servidor se reiniciará automáticamente todos los días a la hora configurada para mantener un rendimiento óptimo.</i>\n\n"
+	texto += fmt.Sprintf("📊 <b>Estado:</b> %s\n", status)
+	texto += fmt.Sprintf("⏰ <b>Hora programada:</b> <code>%s</code>\n", data.RebootTime)
+	texto += "━━━━━━━━━━━━━━\n"
+	texto += "<i>Selecciona una opción:</i>"
+
+	return SafeEditCtx(c, b, texto, markup)
+}
+
+func handleToggleAutoReboot(c tele.Context, b *tele.Bot) error {
+	db.Update(func(data *db.ConfigData) error {
+		data.AutoReboot = !data.AutoReboot
+		return nil
+	})
+	return handleAutoRebootMenu(c, b)
+}
+
+func handleEditRebootTimePrompt(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_reboot_time")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_autoreboot")))
+	return SafeEditCtx(c, b, "🕒 <b>Programar Hora de Reinicio</b>\n\n✏️ <i>Escribe la hora en formato 24h (HH:MM):</i>\n\nEjemplo: <code>04:30</code>", markup)
 }

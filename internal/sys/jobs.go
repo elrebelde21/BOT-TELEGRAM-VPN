@@ -31,17 +31,28 @@ func AutoCleanupLoop(b *tele.Bot) {
 			EnforceConnectionLimits()
 		}
 
-		// 1. Limpieza de usuarios vencidos de forma periódica
+		// 1. Limpieza de usuarios vencidos y AutoReboot de forma periódica
 		if tick >= 9 { // Cada 60-70 segundos aprox
 			// Guardar el tráfico en DB para que persista tras reiniciar la VPS
 			GetGlobalTraffic()
 
 			db.Update(func(data *db.ConfigData) error {
-				now := time.Now().Format("2006-01-02")
+				now := time.Now()
+				nowStr := now.Format("2006-01-02")
+				nowHM := now.Format("15:04")
+
+				// REBOOT DIARIO AUTOMÁTICO
+				if data.AutoReboot && data.RebootTime == nowHM && data.LastRebootDate != nowStr {
+					data.LastRebootDate = nowStr // Marcar día para evitar bucle antes del apagado
+					go func() {
+						time.Sleep(2 * time.Second)
+						exec.Command("reboot").Run()
+					}()
+				}
 
 				// Revisar SSH
 				for user, expire := range data.SSHTimeUsers {
-					if now > expire {
+					if nowStr > expire {
 						DeleteSSHUser(user)
 						delete(data.SSHTimeUsers, user)
 						delete(data.SSHOwners, user)
@@ -51,7 +62,7 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 				// Revisar ZiVPN - auto-expiración por fecha
 				for pass, expire := range data.ZivpnUsers {
-					if now > expire {
+					if nowStr > expire {
 						vpn.RemoveZivpnUser(pass)
 						delete(data.ZivpnUsers, pass)
 						delete(data.ZivpnOwners, pass)
@@ -61,7 +72,7 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 				// Revisar Xray - auto-expiración por fecha
 				for uid, user := range data.XrayUsers {
-					if now > user.Expire {
+					if nowStr > user.Expire {
 						vpn.RemoveXrayUser(uid)
 						delete(data.XrayUsers, uid)
 					}
