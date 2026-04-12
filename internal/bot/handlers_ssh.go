@@ -150,7 +150,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 			return nil
 		}
 		SetTempValue(chatID, "edit_target", user)
-		DeleteUserStep(chatID)
+		SetUserStep(chatID, "") // Clear step but retain TempData for subsequent edits
 		return showEditUserMenu(c, b, user)
 
 	case "awaiting_edit_pass_val":
