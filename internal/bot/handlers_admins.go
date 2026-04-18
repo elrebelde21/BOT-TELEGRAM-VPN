@@ -41,6 +41,8 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 
 	btnReboot := markup.Data("🔄 Reiniciar VPS", "reboot_vps_confirm")
 	btnAutoReboot := markup.Data("🕒 Auto Reboot", "menu_autoreboot")
+	btnBackup := markup.Data("🔄 Backup a Drive", "drive_backup")
+	btnRestore := markup.Data("📥 Restaurar Backup", "drive_restore")
 	btnBack := markup.Data("🔙 Volver", "back_main")
 
 	btnQuotas := markup.Data("📊 Cuotas Creación", "edit_quotas")
@@ -51,6 +53,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnDel, btnInfo),
 		markup.Row(btnCloudflare, btnCloudfront),
 		markup.Row(btnBanner, btnQuotas),
+		markup.Row(btnBackup, btnRestore),
 		markup.Row(btnReset, btnScanToggle),
 		markup.Row(btnAutoReboot, btnReboot),
 		markup.Row(btnBack),

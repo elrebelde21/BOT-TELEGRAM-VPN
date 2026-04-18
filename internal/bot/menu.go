@@ -274,6 +274,11 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "menu_autoreboot"}, func(c tele.Context) error { return handleAutoRebootMenu(c, b) })
 	b.Handle(&tele.Btn{Unique: "toggle_autoreboot"}, func(c tele.Context) error { return handleToggleAutoReboot(c, b) })
 
+	// Drive Backups
+	b.Handle("/authdrive", func(c tele.Context) error { return handleAuthDrive(c, b) })
+	b.Handle(&tele.Btn{Unique: "drive_backup"}, func(c tele.Context) error { return handleDriveBackup(c, b) })
+	b.Handle(&tele.Btn{Unique: "drive_restore"}, func(c tele.Context) error { return handleDriveRestore(c, b) })
+
 	// Generar Usuario SSH / ZIVPN Handler
 	b.Handle(&tele.Btn{Unique: "crear_ssh"}, func(c tele.Context) error {
 		return handleCrearSSH(c, b)
