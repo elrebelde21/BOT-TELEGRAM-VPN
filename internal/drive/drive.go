@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	CredentialsFile = "credentials.json"
-	TokenFile       = "token.json"
+	CredentialsFile = "/opt/depwise_bot/credentials.json"
+	TokenFile       = "/opt/depwise_bot/token.json"
 	FolderName      = "BotVPN_Backups"
 	MaxBackups      = 2
 )
