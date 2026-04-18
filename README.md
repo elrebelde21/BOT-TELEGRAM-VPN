@@ -37,13 +37,13 @@
 - **Deep System Cleanup:** Botón de un solo clic para liberar cuellos de botella de memoria (cachés, logs pesados, paquetes huérfanos).
 
 ### ☁️ Copias de Seguridad "Plug & Play" (Google Drive)
-Tu bot incluye un sistema de respaldos directamente integrado con Telegram, ¡sin necesidad de comandos complicados vía SSH! Para activar las copias de seguridad (manuales y automáticas cada 24H):
-1. Entra a **Google Cloud Console**, busca `Cuentas de Servicio` (Service Accounts) y crea una cuenta.
-2. Entra a las opciones de esa cuenta, añade una **Clave JSON** nueva y descárgala a tu celular o PC.
-3. Comparte la carpeta que prefieras en tu Google Drive con el correo robótico de la cuenta de servicio que acabas de crear.
-4. **⚠️ Arrastra y envía ese archivo `.json` como un documento a tu propio Bot de Telegram.**
+Tu bot incluye un sistema de respaldos directamente integrado con tu Google Drive personal. Para activar las copias de seguridad (manuales y automáticas cada 24H):
+1. Entra a **Google Cloud Console**, busca `Credenciales` (Credentials) y crea un **ID de Cliente OAuth** (Aplicación de Escritorio).
+2. Descarga el archivo JSON resultante, renómbralo a `credentials.json` y colócalo en la misma carpeta donde instalaste el bot en tu servidor.
+3. Abre Telegram y envíale al bot el comando: `/authdrive`
+4. Sigue las breves instrucciones en pantalla para darle permiso al bot **solo una vez en la vida**.
 
-¡Listo! El bot encriptará permanentemente las credenciales y comenzará a enviarte tu base de datos y configuraciones directo a la nube. Si tu VPS muere, instala un bot nuevo, sube tu JSON de nuevo y ¡presiona **Restaurar Backup**!
+¡Listo! A partir de ahora el bot enviará todos los días tu base de datos a Google Drive sin que tengas que hacer nada.
 
 ---
 
