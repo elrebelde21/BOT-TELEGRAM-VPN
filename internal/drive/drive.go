@@ -138,15 +138,7 @@ func ensureFolder(srv *drive.Service) (string, error) {
 		return r.Files[0].Id, nil
 	}
 	
-	f := &drive.File{
-		Name:     FolderName,
-		MimeType: "application/vnd.google-apps.folder",
-	}
-	folder, err := srv.Files.Create(f).Do()
-	if err != nil {
-		return "", err
-	}
-	return folder.Id, nil
+	return "", fmt.Errorf("crea una carpeta llamada '%s' en tu Google Drive personal y dale acceso de Editor al correo 'robótico' de tu clave JSON", FolderName)
 }
 
 func cleanupOldBackups(srv *drive.Service, folderId string) {
