@@ -125,6 +125,11 @@ func StartBot() {
 		return handleTextInputs(c, b)
 	})
 
+	// Document Interceptor para recolección del JSON (Drive)
+	b.Handle(tele.OnDocument, func(c tele.Context) error {
+		return handleDocumentUploads(c, b)
+	})
+
 	// Opciones del Menú Principal
 	b.Handle(&tele.Btn{Unique: "menu_crear"}, func(c tele.Context) error {
 		return SafeEditCtx(c, b, menuCrearText(), menuCrearMarkup())
@@ -275,7 +280,6 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "toggle_autoreboot"}, func(c tele.Context) error { return handleToggleAutoReboot(c, b) })
 
 	// Drive Backups
-	b.Handle("/authdrive", func(c tele.Context) error { return handleAuthDrive(c, b) })
 	b.Handle(&tele.Btn{Unique: "drive_backup"}, func(c tele.Context) error { return handleDriveBackup(c, b) })
 	b.Handle(&tele.Btn{Unique: "drive_restore"}, func(c tele.Context) error { return handleDriveRestore(c, b) })
 

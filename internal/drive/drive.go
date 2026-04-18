@@ -2,102 +2,59 @@ package drive
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"time"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	drive "google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
 
 const (
 	CredentialsFile = "credentials.json"
-	TokenFile       = "token.json"
 	FolderName      = "BotVPN_Backups"
 	MaxBackups      = 2
 )
 
-func getClient(ctx context.Context, config *oauth2.Config, tok *oauth2.Token) *http.Client {
-	return config.Client(ctx, tok)
-}
-
-func getConfig() (*oauth2.Config, error) {
-	b, err := os.ReadFile(CredentialsFile)
-	if err != nil {
-		return nil, fmt.Errorf("imposible leer credentials.json: %v", err)
-	}
-	config, err := google.ConfigFromJSON(b, drive.DriveFileScope)
-	if err != nil {
-		return nil, fmt.Errorf("imposible parsear la configuracion: %v", err)
-	}
-	return config, nil
-}
-
-// GetAuthURL retorna la URL de Google para que el admin autorice.
-func GetAuthURL() (string, error) {
-	config, err := getConfig()
-	if err != nil {
-		return "", err
-	}
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	return authURL, nil
-}
-
-// SaveToken procesa el codigo de autorización y lo guarda en token.json
-func SaveToken(authCode string) error {
-	config, err := getConfig()
-	if err != nil {
-		return err
-	}
-	tok, err := config.Exchange(context.TODO(), authCode)
-	if err != nil {
-		return fmt.Errorf("no se pudo recuperar el token: %v", err)
-	}
-	f, err := os.OpenFile(TokenFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("no se pudo crear token.json: %v", err)
-	}
-	defer f.Close()
-	return json.NewEncoder(f).Encode(tok)
-}
-
 func getService() (*drive.Service, error) {
-	config, err := getConfig()
-	if err != nil {
-		return nil, err
+	if _, err := os.Stat(CredentialsFile); os.IsNotExist(err) {
+		return nil, fmt.Errorf("credentials.json no existe")
 	}
-	
-	f, err := os.Open(TokenFile)
-	if err != nil {
-		return nil, fmt.Errorf("no estas logueado, necesitas configurar con /authdrive")
-	}
-	defer f.Close()
-	
-	tok := &oauth2.Token{}
-	if err := json.NewDecoder(f).Decode(tok); err != nil {
-		return nil, err
-	}
-	
-	client := getClient(context.TODO(), config, tok)
-	srv, err := drive.NewService(context.TODO(), option.WithHTTPClient(client))
+	ctx := context.Background()
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(CredentialsFile), option.WithScopes(drive.DriveFileScope))
 	if err != nil {
 		return nil, err
 	}
 	return srv, nil
 }
 
-// IsAuthenticated revisa si ya hay conexión lista
+// IsAuthenticated verifica de forma ligera si el archivo existe y es válido
 func IsAuthenticated() bool {
-	_, err := getService()
-	return err == nil
+	if _, err := os.Stat(CredentialsFile); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
-// UploadBackup toma el un archivo local y lo sube al Drive limitando la cantidad
+// CheckCredentialsFile prueba un JSON local para asegurar que es válido antes de aplicarlo
+func CheckCredentialsFile(path string) error {
+	ctx := context.Background()
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(path), option.WithScopes(drive.DriveFileScope))
+	if err != nil {
+		return fmt.Errorf("el archivo JSON no es una clave API válida: %v", err)
+	}
+
+	// Ping pequeño para ver si autentica de verdad
+	_, err = srv.Files.List().PageSize(1).Do()
+	if err != nil {
+		return fmt.Errorf("el JSON es válido, pero la API de Drive no está activa en tu proyecto: %v", err)
+	}
+
+	return nil
+}
+
+// UploadBackup toma el un archivo local y lo sube al Drive
 func UploadBackup(filePath string) error {
 	srv, err := getService()
 	if err != nil {
