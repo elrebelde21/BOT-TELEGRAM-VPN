@@ -174,11 +174,25 @@ func handleDelAdminMenu(c tele.Context, b *tele.Bot) error {
 
 func handleDelAdminExec(c tele.Context, b *tele.Bot) error {
 	id := strings.TrimPrefix(c.Callback().Data, "del_adm_exec:")
+
+	// Buscar alias antes de borrar
+	data, _ := db.Load()
+	alias := "Admin"
+	if info, ok := data.Admins[id]; ok {
+		alias = info.Alias
+	}
+
 	db.Update(func(data *db.ConfigData) error {
 		delete(data.Admins, id)
 		return nil
 	})
-	return handleListAdmins(c, b)
+
+	// Responder al callback para desbloquear el botón
+	c.Respond(&tele.CallbackResponse{Text: "✅ Admin eliminado"})
+
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("🔙 Volver a Ajustes", "menu_admins")))
+	return SafeEditCtx(c, b, fmt.Sprintf("✅ <b>Admin Eliminado</b>\n\n👤 <b>%s</b>\n🆔 ID: <code>%s</code>\n\n<i>Ya no tiene permisos de administrador.</i>", alias, id), markup)
 }
 
 func handleRenameAdminMenu(c tele.Context, b *tele.Bot) error {
