@@ -131,8 +131,10 @@ func handleListAdmins(c tele.Context, b *tele.Bot) error {
 	if len(data.Admins) == 0 {
 		res += "\n<i>No hay administradores adicionales.</i>"
 	} else {
+		i := 1
 		for id, info := range data.Admins {
-			res += fmt.Sprintf("👤 ID: <code>%s</code> - <b>%s</b>\n", id, info.Alias)
+			res += fmt.Sprintf("\n%d. 👤 <b>%s</b>\n   └ ID: <code>%s</code>\n", i, info.Alias, id)
+			i++
 		}
 	}
 
@@ -148,7 +150,7 @@ func handleAddAdminPrompt(c tele.Context, b *tele.Bot) error {
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
 
-	return SafeEditCtx(c, b, "➕ <b>Agregar Nuevo Administrador</b>\n\n✏️ <i>Escribe el ID numérico del usuario de Telegram:</i>\n\nEjemplo: <code>123456789</code>", markup)
+	return SafeEditCtx(c, b, "➕ <b>Agregar Nuevo Administrador</b>\n\n📝 <b>Paso 1/2:</b> Escribe el <b>ID numérico</b> del usuario de Telegram:\n\nEjemplo: <code>123456789</code>", markup)
 }
 
 func handleDelAdminMenu(c tele.Context, b *tele.Bot) error {

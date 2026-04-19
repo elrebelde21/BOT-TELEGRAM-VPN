@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/sys"
@@ -582,20 +583,43 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_admin_id":
 		id := text
-		DeleteUserStep(chatID)
 
 		// Solo numérico
 		if _, err := strconv.ParseInt(id, 10, 64); err != nil {
-			b.Edit(lastMsg, "❌ <b>ID Inválido:</b> Debe ser un número.", markup, tele.ModeHTML)
+			markupRetry := &tele.ReplyMarkup{}
+			markupRetry.Inline(markupRetry.Row(markupRetry.Data("❌ Cancelar", "menu_admins")))
+			b.Edit(lastMsg, "❌ <b>ID Inválido:</b> Debe ser un número. Intenta de nuevo:", markupRetry, tele.ModeHTML)
+			return nil
+		}
+
+		// Guardar ID temporalmente y pedir alias
+		SetTempValue(chatID, "admin_id", id)
+		SetUserStep(chatID, "awaiting_vpn_admin_alias")
+
+		markupCancel := &tele.ReplyMarkup{}
+		markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "menu_admins")))
+		b.Edit(lastMsg, fmt.Sprintf("✅ ID: <code>%s</code>\n\n📝 <b>Paso 2/2:</b> Escribe un <b>nombre o alias</b> para identificar a este admin:\n\nEjemplo: <code>Carlos</code>, <code>Revendedor Lima</code>", id), markupCancel, tele.ModeHTML)
+		return nil
+
+	case "awaiting_vpn_admin_alias":
+		alias := strings.TrimSpace(text)
+		id := GetTempValue(chatID, "admin_id")
+		DeleteUserStep(chatID)
+
+		if alias == "" {
+			alias = "Admin"
+		}
+		if id == "" {
+			b.Edit(lastMsg, "❌ <b>Error:</b> No se encontró el ID temporal. Intenta de nuevo desde el menú.", markup, tele.ModeHTML)
 			return nil
 		}
 
 		db.Update(func(data *db.ConfigData) error {
-			data.Admins[id] = db.AdminInfo{Alias: "Admin"}
+			data.Admins[id] = db.AdminInfo{Alias: alias}
 			return nil
 		})
 
-		b.Edit(lastMsg, fmt.Sprintf("✅ <b>ID %s</b> ahora es administrador.", id), markup, tele.ModeHTML)
+		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Nuevo Administrador Registrado</b>\n\n👤 <b>Alias:</b> %s\n🆔 <b>ID:</b> <code>%s</code>", alias, id), markup, tele.ModeHTML)
 		return nil
 
 	case "awaiting_vpn_extrainfo":
