@@ -69,6 +69,7 @@ func AutoCleanupLoop(b *tele.Bot) {
 						delete(data.SSHTimeUsers, user)
 						delete(data.SSHOwners, user)
 						delete(data.SSHLastActive, user)
+						delete(data.SSHBannerTitles, user)
 					}
 				}
 
@@ -95,6 +96,9 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 			// Liberar memoria RAM inactiva al Sistema Operativo
 			debug.FreeOSMemory()
+
+			// Regenerar banners de usuarios SSH para actualizar días restantes
+			RefreshAllBanners()
 
 			// Nueva Ejecución: Limpieza cada 60s terminada
 			tick = 0

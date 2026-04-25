@@ -97,7 +97,14 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 				SetTempValue(chatID, "days", strconv.Itoa(data.GetMaxDaysPublic()))
 				SetTempValue(chatID, "limit", strconv.Itoa(data.GetMaxLimitPublic()))
 			}
-			return finishSSHCreation(c, b, chatID, lastMsg)
+			// Pedir título del banner
+			SetUserStep(chatID, "awaiting_ssh_banner_title")
+			markupTitle := &tele.ReplyMarkup{}
+			btnDefault := markupTitle.Data("🏷️ Título Predeterminado", "ssh_default_title")
+			btnCancel2 := markupTitle.Data("❌ Cancelar", "cancelar_accion")
+			markupTitle.Inline(markupTitle.Row(btnDefault), markupTitle.Row(btnCancel2))
+			_, err := SafeEdit(chatID, b, lastMsg, "🏷️ <b>Título del Banner SSH</b>\n\n✏️ <i>Escribe un título personalizado para el banner del usuario (ej: INTERNET ILIMITADO, SPEED PREMIUM VIP):</i>", markupTitle)
+			return err
 		}
 		SetUserStep(chatID, "awaiting_ssh_days")
 		_, err := SafeEdit(chatID, b, lastMsg, "⏳ <i>¿Cuántos días de duración (ej: 30)?</i>", markupCancel)
@@ -121,6 +128,17 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 			return err
 		}
 		SetTempValue(chatID, "limit", text)
+		// Pedir título del banner
+		SetUserStep(chatID, "awaiting_ssh_banner_title")
+		markupTitle := &tele.ReplyMarkup{}
+		btnDefault := markupTitle.Data("🏷️ Título Predeterminado", "ssh_default_title")
+		btnCancel2 := markupTitle.Data("❌ Cancelar", "cancelar_accion")
+		markupTitle.Inline(markupTitle.Row(btnDefault), markupTitle.Row(btnCancel2))
+		_, err = SafeEdit(chatID, b, lastMsg, "🏷️ <b>Título del Banner SSH</b>\n\n✏️ <i>Escribe un título personalizado para el banner del usuario (ej: INTERNET ILIMITADO, SPEED PREMIUM VIP):</i>", markupTitle)
+		return err
+
+	case "awaiting_ssh_banner_title":
+		SetTempValue(chatID, "banner_title", strings.ToUpper(strings.TrimSpace(text)))
 		return finishSSHCreation(c, b, chatID, lastMsg)
 
 	case "awaiting_broadcast":
@@ -180,6 +198,15 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		if err != nil {
 			SafeEdit(chatID, b, lastMsg, "❌ Error: "+err.Error(), markup)
 		} else {
+			// Regenerar banner con nueva fecha
+			db.Update(func(data *db.ConfigData) error {
+				newExpire := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+				data.SSHTimeUsers[user] = newExpire
+				title := data.SSHBannerTitles[user]
+				limit := sys.GetUserMaxLogins(user)
+				sys.WriteUserBanner(user, title, limit, newExpire)
+				return nil
+			})
 			SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Renovado %d días para %s", days, user), markup)
 		}
 		return nil
@@ -194,6 +221,12 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		if err != nil {
 			SafeEdit(chatID, b, lastMsg, "❌ Error: "+err.Error(), markup)
 		} else {
+			// Regenerar banner con nuevo límite
+			data, _ := db.Load()
+			if expire, ok := data.SSHTimeUsers[user]; ok {
+				title := data.SSHBannerTitles[user]
+				sys.WriteUserBanner(user, title, limit, expire)
+			}
 			SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Límite cambiado para %s", user), markup)
 		}
 		return nil
@@ -292,8 +325,27 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 			}
 			data.SSHHandles[user] = "@" + c.Sender().Username
 		}
+
+		// Guardar título del banner
+		bannerTitle := mData["banner_title"]
+		if bannerTitle == "" {
+			bannerTitle = "INTERNET ILIMITADO"
+		}
+		if data.SSHBannerTitles == nil {
+			data.SSHBannerTitles = make(map[string]string)
+		}
+		data.SSHBannerTitles[user] = bannerTitle
+
 		return nil
 	})
+
+	// Generar banner individual
+	expireDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+	bannerTitle := mData["banner_title"]
+	if bannerTitle == "" {
+		bannerTitle = "INTERNET ILIMITADO"
+	}
+	sys.WriteUserBanner(user, bannerTitle, limit, expireDate)
 
 	// Respuesta final
 	ip := sys.GetPublicIP()
@@ -378,7 +430,14 @@ func handleRandomPass(c tele.Context, b *tele.Bot) error {
 			SetTempValue(chatID, "days", strconv.Itoa(data.GetMaxDaysPublic()))
 			SetTempValue(chatID, "limit", strconv.Itoa(data.GetMaxLimitPublic()))
 		}
-		return finishSSHCreation(c, b, chatID, lastMsg)
+		// Pedir título del banner
+		SetUserStep(chatID, "awaiting_ssh_banner_title")
+		markupTitle := &tele.ReplyMarkup{}
+		btnDefault := markupTitle.Data("🏷️ Título Predeterminado", "ssh_default_title")
+		btnCancel := markupTitle.Data("❌ Cancelar", "cancelar_accion")
+		markupTitle.Inline(markupTitle.Row(btnDefault), markupTitle.Row(btnCancel))
+		_, err := SafeEdit(chatID, b, lastMsg, "✅ Pass: "+pass+"\n\n🏷️ <b>Título del Banner SSH</b>\n\n✏️ <i>Escribe un título personalizado (ej: INTERNET ILIMITADO):</i>", markupTitle)
+		return err
 	}
 
 	SetUserStep(chatID, "awaiting_ssh_days")
@@ -387,6 +446,13 @@ func handleRandomPass(c tele.Context, b *tele.Bot) error {
 
 	_, err := SafeEdit(chatID, b, lastMsg, "✅ Pass: "+pass+"\n⏳ Días:", markupCancel)
 	return err
+}
+
+func handleDefaultTitle(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetTempValue(chatID, "banner_title", "INTERNET ILIMITADO")
+	lastMsg := GetLastBotMsg(chatID)
+	return finishSSHCreation(c, b, chatID, lastMsg)
 }
 
 func HandleEditPass(c tele.Context, b *tele.Bot) error {

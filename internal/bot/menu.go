@@ -294,6 +294,9 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "ssh_rnd_pass"}, func(c tele.Context) error {
 		return handleRandomPass(c, b)
 	})
+	b.Handle(&tele.Btn{Unique: "ssh_default_title"}, func(c tele.Context) error {
+		return handleDefaultTitle(c, b)
+	})
 	b.Handle(&tele.Btn{Unique: "cancelar_accion"}, func(c tele.Context) error {
 		return handleCancel(c, b)
 	})
@@ -318,6 +321,13 @@ func StartBot() {
 
 	// Restaurar reglas de iptables que se borran al reiniciar (SlowDNS, ZiVPN)
 	vpn.RestoreIptablesRules()
+
+	// Instalar sistema de banners individuales por usuario SSH
+	if err := sys.EnsureBannerSystem(); err != nil {
+		log.Printf("Aviso: No se pudo inicializar el sistema de banners: %v", err)
+	}
+	// Regenerar todos los banners existentes al iniciar
+	sys.RefreshAllBanners()
 
 	// Iniciar hilo de auto-limpieza (Rutina concurrente)
 	go sys.AutoCleanupLoop(b)

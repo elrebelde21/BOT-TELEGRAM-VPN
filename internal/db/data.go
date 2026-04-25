@@ -34,6 +34,7 @@ type ConfigData struct {
 	ZivpnHandles     map[string]string    `json:"zivpn_handles"`     // pass -> @handle
 	PublicScanner    bool                 `json:"public_scanner"`    // Toggle scanner for public
 	SSHWebSocket     bool                 `json:"ssh_websocket"`     // SSH WebSocket proxy WS/WSS
+	SSHBannerTitles  map[string]string    `json:"ssh_banner_titles"` // user -> banner title
 	MaxDaysPublic    int                  `json:"max_days_public"`   // Max days for public user creation
 	MaxLimitPublic   int                  `json:"max_limit_public"`  // Max device limit for public
 	MaxDaysAdmin     int                  `json:"max_days_admin"`    // Max days for admin user creation
@@ -150,6 +151,9 @@ func loadUnlocked() (*ConfigData, error) {
 	if data.ZivpnHandles == nil {
 		data.ZivpnHandles = make(map[string]string)
 	}
+	if data.SSHBannerTitles == nil {
+		data.SSHBannerTitles = make(map[string]string)
+	}
 	return &data, nil
 }
 
@@ -255,6 +259,7 @@ func defaultData() *ConfigData {
 		ZivpnLastActive: make(map[string]string),
 		SSHHandles:      make(map[string]string),
 		ZivpnHandles:    make(map[string]string),
+		SSHBannerTitles: make(map[string]string),
 		PublicScanner:   true,
 		XrayUsers:       make(map[string]XrayUser),
 		AutoReboot:      false,

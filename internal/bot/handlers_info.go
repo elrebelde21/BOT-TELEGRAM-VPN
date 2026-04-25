@@ -247,6 +247,9 @@ func processDeleteSteps(text string, chatID int64, c tele.Context, b *tele.Bot) 
 		db.Update(func(d *db.ConfigData) error {
 			delete(d.SSHOwners, target)
 			delete(d.SSHHandles, target)
+			delete(d.SSHBannerTitles, target)
+			delete(d.SSHTimeUsers, target)
+			delete(d.SSHLastActive, target)
 			return nil
 		})
 

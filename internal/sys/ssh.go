@@ -85,6 +85,9 @@ func DeleteSSHUser(username string) error {
 	// 4. Archivo limit
 	os.Remove(fmt.Sprintf("/etc/ssh_limits/%s.limit", username))
 
+	// 5. Eliminar banner individual
+	RemoveUserBanner(username)
+
 	return nil
 }
 
