@@ -51,10 +51,14 @@ func GenerateUserBanner(username, title string, limit int, expireDate string) st
 	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
 	b.WriteString("</h5>\n")
 
-	// Logo DEPWISE grande
-	b.WriteString("<h1 style=\"text-align:center;\">\n")
-	b.WriteString("<font face=\"monospace\" color=\"#00ff00\"><b>DEPWISE</b></font>\n")
-	b.WriteString("</h1>\n")
+	// Logo DEPWISE en ASCII art compacto (21 chars, cabe en móvil)
+	b.WriteString("<h5 style=\"text-align:center;\">\n")
+	b.WriteString("<font face=\"monospace\" color=\"#00ff00\">\n")
+	b.WriteString("┌┬┐┌─┐┌─┐┬ ┬┬┌─┐┌─┐\n")
+	b.WriteString(" ││├┤ ├─┘│││││└─┐├┤ \n")
+	b.WriteString("─┴┘└─┘┴  └┴┘┴└─┘└─┘\n")
+	b.WriteString("</font>\n")
+	b.WriteString("</h5>\n")
 
 	// Separador
 	b.WriteString("<h5 style=\"text-align:center;\">\n")
