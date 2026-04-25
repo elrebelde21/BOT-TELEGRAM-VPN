@@ -35,33 +35,30 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
   <img width="350" alt="Banner SSH Depwise" src="https://img.shields.io/badge/Formato-HTML%20VPN%20Apps-29b6f6?style=for-the-badge">
 </p>
 
-```
-╔══════════════════════════════════╗
-║          ⣶⡆      ⢰⣶⡀           ║
-║          ⣿⡇      ⢸⣿⡇           ║
-║          ⣿⡇  ⣠⣶⣄  ⢸⣿⡇           ║
-║          ⣿⡇ ⢰⣿⣿⣿⡆ ⢸⣿⡇           ║
-║         ⣿⣿⡄⣿⣿⠻⣿⣿⡀⣿⣿⠁          ║
-║          ⹣⣿⣿⣾⣿⡏ ⢹⣿⣷⣿⣿⠏           ║
-║           ⠙⢿⣿⡿   ⢿⣿⡿⠋            ║
-║                                  ║
-║           D E P W I S E          ║
-║                                  ║
-║   ⚡ INTERNET ILIMITADO ⚡       ║
-║   (o tu título personalizado)    ║
-║══════════════════════════════════║
-║  👤 Usuario:    pepito           ║
-║  📅 Vence:      2026-05-25      ║
-║  ⏳ Días:       30               ║
-║  💻 Límite:     3                ║
-║══════════════════════════════════║
-║  📢 Canal:  @Depwise2           ║
-║  👤 Soporte: @Dan3651           ║
-║  🔥 ¡SERVIDORES PREMIUM! 🔥    ║
-║══════════════════════════════════║
-║  ⚠️ REGLAS: NO Torrent/P2P     ║
-║  🚫 NO Spam · 🚫 NO DDoS       ║
-╚══════════════════════════════════╝
+```text
+══════════════════════
+⠀⠀⢀⣶⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⡀⠀⠀
+⠀⠀⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀
+⠀⠀⢸⣿⡇⠀⠀⠀⣠⣶⣄⠀⠀⠀⢸⣿⡇⠀⠀
+⠀⠀⢸⣿⡇⠀⠀⢰⣿⣿⣿⡆⠀⠀⢸⣿⡇⠀⠀
+⠀⠀⠈⣿⣿⡄⢀⣿⣿⠻⣿⣿⡀⢠⣿⣿⠁⠀⠀
+⠀⠀⠀⠹⣿⣿⣾⣿⡏⠀⢹⣿⣷⣿⣿⠏⠀⠀⠀
+⠀⠀⠀⠀⠙⢿⣿⡿⠀⠀⠀⢿⣿⡿⠋⠀⠀⠀⠀
+        DEPWISE       
+══════════════════════
+ ⚡ INTERNET ILIMITADO ⚡
+══════════════════════
+ 👤 Usuario: pepito
+ 📅 Vence: 2026-05-25
+ ⏳ Días Restant.: 30
+ 💻 Límite: 3
+══════════════════════
+ 🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥
+ 📢 Canal: @Depwise2
+ 👤 Soporte: @Dan3651
+══════════════════════
+ ✅ CREADO EN : @Depwise_bot
+══════════════════════
 ```
 
 > [!NOTE]
