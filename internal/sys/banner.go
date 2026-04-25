@@ -21,7 +21,6 @@ const (
 
 // GenerateUserBanner genera el contenido HTML del banner para un usuario SSH
 // Compatible con HTTP Injector, HTTP Custom, HA Tunnel y apps VPN
-// Diseño simplificado y limpio
 func GenerateUserBanner(username, title string, limit int, expireDate string) string {
 	if title == "" {
 		title = "INTERNET ILIMITADO"
@@ -37,7 +36,7 @@ func GenerateUserBanner(username, title string, limit int, expireDate string) st
 		}
 	}
 
-	limitStr := fmt.Sprintf("%d dispositivos", limit)
+	limitStr := fmt.Sprintf("%d", limit)
 	if limit <= 0 {
 		limitStr = "∞ Ilimitado"
 	}
@@ -46,71 +45,81 @@ func GenerateUserBanner(username, title string, limit int, expireDate string) st
 
 	b.WriteString("<html>\n")
 
-	// Línea superior
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	// Separador superior
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
-	// Logo DEPWISE en ASCII art compacto (21 chars, cabe en móvil)
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font face=\"monospace\" color=\"#00ff00\">\n")
-	b.WriteString("┌┬┐┌─┐┌─┐┬ ┬┬┌─┐┌─┐\n")
-	b.WriteString(" ││├┤ ├─┘│││││└─┐├┤ \n")
-	b.WriteString("─┴┘└─┘┴  └┴┘┴└─┘└─┘\n")
-	b.WriteString("</font>\n")
+	// Logo braille Depwise (probado y funcional en HTTP Injector)
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font face=\"monospace\" color=\"#00ff00\">")
+	b.WriteString("⠀⠀⢀⣶⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⡀⠀⠀<br>")
+	b.WriteString("⠀⠀⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀<br>")
+	b.WriteString("⠀⠀⢸⣿⡇⠀⠀⠀⣠⣶⣄⠀⠀⠀⢸⣿⡇⠀⠀<br>")
+	b.WriteString("⠀⠀⢸⣿⡇⠀⠀⢰⣿⣿⣿⡆⠀⠀⢸⣿⡇⠀⠀<br>")
+	b.WriteString("⠀⠀⠈⣿⣿⡄⢀⣿⣿⠻⣿⣿⡀⢠⣿⣿⠁⠀⠀<br>")
+	b.WriteString("⠀⠀⠀⠹⣿⣿⣾⣿⡏⠀⢹⣿⣷⣿⣿⠏⠀⠀⠀<br>")
+	b.WriteString("⠀⠀⠀⠀⠙⢿⣿⡿⠀⠀⠀⢿⣿⡿⠋⠀⠀⠀⠀")
+	b.WriteString("</font>")
 	b.WriteString("</h5>\n")
+
+	// Texto DEPWISE
+	b.WriteString("<h1 style=\"text-align:center;\">")
+	b.WriteString("<font face=\"monospace\" color=\"#00ff00\"><b>DEPWISE</b></font>")
+	b.WriteString("</h1>\n")
 
 	// Separador
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
 	// Título personalizado
-	b.WriteString("<h3 style=\"text-align:center;\">\n")
-	b.WriteString(fmt.Sprintf("<font color='#FF00FF'><b>⚡ %s ⚡</b></font>\n", title))
+	b.WriteString("<h3 style=\"text-align:center;\">")
+	b.WriteString(fmt.Sprintf("<font color='#FF00FF'><b>⚡ %s ⚡</b></font>", title))
 	b.WriteString("</h3>\n")
 
-	// Separador datos
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	// Separador
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
-	// Datos de la cuenta
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString(fmt.Sprintf("<font color='#ffffff'>👤 Usuario:      </font><font color='#f1c40f'><b>%s</b></font>\n", username))
-	b.WriteString(fmt.Sprintf("<font color='#ffffff'>📅 Vence:        </font><font color='#f1c40f'><b>%s</b></font>\n", expireDate))
-	b.WriteString(fmt.Sprintf("<font color='#ffffff'>⏳ Días Restant.: </font><font color='#f1c40f'><b>%d</b></font>\n", daysLeft))
-	b.WriteString(fmt.Sprintf("<font color='#ffffff'>💻 Límite:       </font><font color='#f1c40f'><b>%s</b></font>\n", limitStr))
+	// Datos de la cuenta — cada dato en su propia línea con <br>
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>👤 Usuario: </font><font color='#f1c40f'><b>%s</b></font><br>", username))
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>📅 Vence: </font><font color='#f1c40f'><b>%s</b></font><br>", expireDate))
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>⏳ Días Restant.: </font><font color='#f1c40f'><b>%d</b></font><br>", daysLeft))
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>💻 Límite: </font><font color='#f1c40f'><b>%s</b></font>", limitStr))
 	b.WriteString("</h5>\n")
 
-	// Separador promo
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	// Separador
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
-	// Promoción y contacto
-	b.WriteString("<h4 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#FF00FF'><b>🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥</b></font>\n")
+	// Promoción
+	b.WriteString("<h4 style=\"text-align:center;\">")
+	b.WriteString("<font color='#FF00FF'><b>🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥</b></font>")
 	b.WriteString("</h4>\n")
 
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#ffffff'>📢 Canal: </font><a href=\"https://t.me/Depwise2\"><font color='#f1c40f'>@Depwise2</font></a>\n")
-	b.WriteString("<font color='#ffffff'>👤 Soporte: </font><a href=\"https://t.me/Dan3651\"><font color='#f1c40f'>@Dan3651</font></a>\n")
+	// Contacto — cada uno en su línea
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#ffffff'>📢 Canal: </font><a href=\"https://t.me/Depwise2\"><font color='#f1c40f'>@Depwise2</font></a><br>")
+	b.WriteString("<font color='#ffffff'>👤 Soporte: </font><a href=\"https://t.me/Dan3651\"><font color='#f1c40f'>@Dan3651</font></a>")
 	b.WriteString("</h5>\n")
 
-	// Separador final
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	// Separador
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
 	// Crédito
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#00e676'><b>✅ CREADO EN : @Depwise_bot</b></font>\n")
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#00e676'><b>✅ CREADO EN : @Depwise_bot</b></font>")
 	b.WriteString("</h5>\n")
 
 	// Línea inferior
-	b.WriteString("<h5 style=\"text-align:center;\">\n")
-	b.WriteString("<font color='#29b6f6'>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</font>\n")
+	b.WriteString("<h5 style=\"text-align:center;\">")
+	b.WriteString("<font color='#29b6f6'>══════════════════════</font>")
 	b.WriteString("</h5>\n")
 
 	b.WriteString("</html>\n")
