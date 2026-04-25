@@ -304,50 +304,70 @@ const defaultBanner = `<html>
 func handleEditBannerPrompt(c tele.Context, b *tele.Bot) error {
 	data, _ := db.Load()
 
-	status := "❌ Sin banner"
+	status := "👤 Banners Individuales (Activo)"
 	bannerType := ""
 	if data.SSHBanner != "" {
-		status = "✅ Activo"
-		if data.SSHBanner == defaultBanner {
-			bannerType = "\n📋 <b>Tipo:</b> Predeterminado (Depwise)"
-		} else {
-			bannerType = "\n📋 <b>Tipo:</b> Personalizado"
-		}
+		status = "🌐 Banner Global (Activo)"
+		bannerType = "\n\n⚠️ <i>El sistema individual está desactivado. Todas las cuentas usarán el mismo banner global.</i>"
+	} else {
+		bannerType = "\n\n✅ <i>Cada usuario tiene su propio banner con días y límites.</i>"
 	}
 
 	markup := &tele.ReplyMarkup{}
-	btnDefault := markup.Data("🎨 Activar Predeterminado", "banner_set_default")
-	btnCustom := markup.Data("✏️ Personalizar", "banner_set_custom")
-	btnDeactivate := markup.Data("🚫 Desactivar Banner", "banner_deactivate")
+	btnPromo := markup.Data("📝 Editar Textos Promo", "edit_promo_menu")
+	btnCustom := markup.Data("🌐 Activar Banner Global", "banner_set_custom")
+	btnDeactivate := markup.Data("🚫 Desactivar Global (Usar Individual)", "banner_deactivate")
 	btnBack := markup.Data("🔙 Volver", "menu_admins")
 
 	markup.Inline(
-		markup.Row(btnDefault),
+		markup.Row(btnPromo),
 		markup.Row(btnCustom),
 		markup.Row(btnDeactivate),
 		markup.Row(btnBack),
 	)
 
-	texto := fmt.Sprintf("📜 <b>Gestión de Banner SSH</b>\n\n📊 <b>Estado:</b> %s%s\n\n<i>El banner se muestra al usuario al conectar por SSH.</i>\n\n¿Qué deseas hacer?", status, bannerType)
+	texto := fmt.Sprintf("📜 <b>Gestión de Banners SSH</b>\n\n📊 <b>Modo Actual:</b> %s%s\n\n¿Qué deseas hacer?", status, bannerType)
 	return SafeEditCtx(c, b, texto, markup)
 }
 
-func handleBannerSetDefault(c tele.Context, b *tele.Bot) error {
-	SafeEditCtx(c, b, "⏳ <i>Activando banner predeterminado...</i>", nil)
+func handleEditPromoMenu(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
 
-	db.Update(func(data *db.ConfigData) error {
-		data.SSHBanner = defaultBanner
-		return nil
-	})
-
-	err := sys.SetSSHBanner(defaultBanner)
-	markup := &tele.ReplyMarkup{}
-	markup.Inline(markup.Row(markup.Data("🔙 Volver", "edit_banner")))
-
-	if err != nil {
-		return SafeEditCtx(c, b, fmt.Sprintf("⚠️ <b>Banner guardado pero error al aplicar:</b>\n%v", err), markup)
+	promoText := "🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥"
+	if data.BannerPromoText != "" {
+		promoText = data.BannerPromoText
 	}
-	return SafeEditCtx(c, b, "✅ <b>Banner Depwise predeterminado activado y aplicado.</b>", markup)
+
+	promoChannel := "@Depwise2"
+	if data.BannerPromoChannel != "" {
+		promoChannel = data.BannerPromoChannel
+	}
+
+	promoSupport := "@Dan3651"
+	if data.BannerPromoSupport != "" {
+		promoSupport = data.BannerPromoSupport
+	}
+
+	markup := &tele.ReplyMarkup{}
+	btnText := markup.Data("📝 Editar Mensaje Promo", "edit_promo_text")
+	btnChannel := markup.Data("📢 Editar Canal", "edit_promo_channel")
+	btnSupport := markup.Data("👤 Editar Soporte", "edit_promo_support")
+	btnBack := markup.Data("🔙 Volver", "edit_banner")
+
+	markup.Inline(
+		markup.Row(btnText),
+		markup.Row(btnChannel),
+		markup.Row(btnSupport),
+		markup.Row(btnBack),
+	)
+
+	texto := "📝 <b>Editar Textos Promocionales (Banners Individuales)</b>\n\n"
+	texto += "Estos textos aparecerán en la parte inferior de los banners de cada usuario.\n\n"
+	texto += fmt.Sprintf("💬 <b>Mensaje Promo:</b>\n<code>%s</code>\n\n", promoText)
+	texto += fmt.Sprintf("📢 <b>Canal:</b>\n<code>%s</code>\n\n", promoChannel)
+	texto += fmt.Sprintf("👤 <b>Soporte:</b>\n<code>%s</code>", promoSupport)
+
+	return SafeEditCtx(c, b, texto, markup)
 }
 
 func handleBannerSetCustom(c tele.Context, b *tele.Bot) error {
@@ -358,20 +378,46 @@ func handleBannerSetCustom(c tele.Context, b *tele.Bot) error {
 	return SafeEditCtx(c, b, "📜 <b>Banner SSH Personalizado</b>\n\n✏️ <i>Escribe el texto del banner (admite HTML básico):</i>\n\nEsto se mostrará al conectar por SSH.", markup)
 }
 
+func handleEditPromoText(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_promo_text")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_promo_menu")))
+	return SafeEditCtx(c, b, "💬 <b>Editar Mensaje Promo</b>\n\n✏️ <i>Escribe el nuevo texto promocional (ej: 🔥 ¡OFERTA SERVIDORES A 5$! 🔥):</i>", markup)
+}
+
+func handleEditPromoChannel(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_promo_channel")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_promo_menu")))
+	return SafeEditCtx(c, b, "📢 <b>Editar Canal Promo</b>\n\n✏️ <i>Escribe el @usuario de tu canal (ej: @MiCanalVIP):</i>", markup)
+}
+
+func handleEditPromoSupport(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_promo_support")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_promo_menu")))
+	return SafeEditCtx(c, b, "👤 <b>Editar Soporte Promo</b>\n\n✏️ <i>Escribe tu @usuario de Telegram para soporte (ej: @TuUsuario):</i>", markup)
+}
+
 func handleBannerDeactivate(c tele.Context, b *tele.Bot) error {
 	db.Update(func(data *db.ConfigData) error {
 		data.SSHBanner = ""
 		return nil
 	})
 
-	// Quitar banner del sistema
+	// Quitar banner global del sistema
 	exec.Command("sh", "-c", "rm -f /etc/sshd_banner").Run()
 	exec.Command("sed", "-i", "/^Banner/d", "/etc/ssh/sshd_config").Run()
-	exec.Command("systemctl", "reload", "ssh").Run()
+
+	// Restaurar banners individuales (Match User)
+	sys.RefreshAllBanners()
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("🔙 Volver", "edit_banner")))
-	return SafeEditCtx(c, b, "✅ <b>Banner SSH desactivado.</b>\n\n<i>Ya no se mostrará ningún banner al conectar.</i>", markup)
+	return SafeEditCtx(c, b, "✅ <b>Banner Global desactivado.</b>\n\n<i>Se ha vuelto al sistema de banners individuales.</i>", markup)
 }
 
 func handleResetHistoryConfirm(c tele.Context, b *tele.Bot) error {

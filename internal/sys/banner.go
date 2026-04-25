@@ -21,9 +21,24 @@ const (
 
 // GenerateUserBanner genera el contenido HTML del banner para un usuario SSH
 // Compatible con HTTP Injector, HTTP Custom, HA Tunnel y apps VPN
-func GenerateUserBanner(username, title string, limit int, expireDate string) string {
+func GenerateUserBanner(username, title string, limit int, expireDate string, data *db.ConfigData) string {
 	if title == "" {
 		title = "INTERNET ILIMITADO"
+	}
+
+	promoText := "🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥"
+	if data != nil && data.BannerPromoText != "" {
+		promoText = data.BannerPromoText
+	}
+
+	promoChannel := "@Depwise2"
+	if data != nil && data.BannerPromoChannel != "" {
+		promoChannel = data.BannerPromoChannel
+	}
+
+	promoSupport := "@Dan3651"
+	if data != nil && data.BannerPromoSupport != "" {
+		promoSupport = data.BannerPromoSupport
 	}
 
 	// Calcular días restantes
@@ -98,13 +113,13 @@ func GenerateUserBanner(username, title string, limit int, expireDate string) st
 
 	// Promoción
 	b.WriteString("<h4 style=\"text-align:center;\">")
-	b.WriteString("<font color='#FF00FF'><b>🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥</b></font>")
+	b.WriteString(fmt.Sprintf("<font color='#FF00FF'><b>%s</b></font>", promoText))
 	b.WriteString("</h4>\n")
 
 	// Contacto — cada uno en su línea
 	b.WriteString("<h5 style=\"text-align:center;\">")
-	b.WriteString("<font color='#ffffff'>📢 Canal: </font><a href=\"https://t.me/Depwise2\"><font color='#f1c40f'>@Depwise2</font></a><br>")
-	b.WriteString("<font color='#ffffff'>👤 Soporte: </font><a href=\"https://t.me/Dan3651\"><font color='#f1c40f'>@Dan3651</font></a>")
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>📢 Canal: </font><a href=\"https://t.me/%s\"><font color='#f1c40f'>%s</font></a><br>", strings.TrimPrefix(promoChannel, "@"), promoChannel))
+	b.WriteString(fmt.Sprintf("<font color='#ffffff'>👤 Soporte: </font><a href=\"https://t.me/%s\"><font color='#f1c40f'>%s</font></a>", strings.TrimPrefix(promoSupport, "@"), promoSupport))
 	b.WriteString("</h5>\n")
 
 	// Separador
@@ -128,12 +143,12 @@ func GenerateUserBanner(username, title string, limit int, expireDate string) st
 }
 
 // WriteUserBanner genera y escribe el banner de un usuario en /etc/ssh_banners/
-func WriteUserBanner(username, title string, limit int, expireDate string) error {
+func WriteUserBanner(username, title string, limit int, expireDate string, data *db.ConfigData) error {
 	if err := os.MkdirAll(bannerDir, 0755); err != nil {
 		return fmt.Errorf("error creando directorio de banners: %v", err)
 	}
 
-	content := GenerateUserBanner(username, title, limit, expireDate)
+	content := GenerateUserBanner(username, title, limit, expireDate, data)
 	path := filepath.Join(bannerDir, username+".banner")
 	return os.WriteFile(path, []byte(content), 0644)
 }
@@ -231,7 +246,7 @@ func RefreshAllBanners() {
 			title = data.SSHBannerTitles[user]
 		}
 		limit := GetUserMaxLogins(user)
-		WriteUserBanner(user, title, limit, expire)
+		WriteUserBanner(user, title, limit, expire, data)
 	}
 
 	// Sincronizar sshd_config con Match User blocks

@@ -34,8 +34,11 @@ type ConfigData struct {
 	ZivpnHandles     map[string]string    `json:"zivpn_handles"`     // pass -> @handle
 	PublicScanner    bool                 `json:"public_scanner"`    // Toggle scanner for public
 	SSHWebSocket     bool                 `json:"ssh_websocket"`     // SSH WebSocket proxy WS/WSS
-	SSHBannerTitles  map[string]string    `json:"ssh_banner_titles"` // user -> banner title
-	MaxDaysPublic    int                  `json:"max_days_public"`   // Max days for public user creation
+	SSHBannerTitles    map[string]string    `json:"ssh_banner_titles"` // user -> banner title
+	BannerPromoText    string               `json:"banner_promo_text"`
+	BannerPromoChannel string               `json:"banner_promo_channel"`
+	BannerPromoSupport string               `json:"banner_promo_support"`
+	MaxDaysPublic      int                  `json:"max_days_public"`   // Max days for public user creation
 	MaxLimitPublic   int                  `json:"max_limit_public"`  // Max device limit for public
 	MaxDaysAdmin     int                  `json:"max_days_admin"`    // Max days for admin user creation
 	MaxLimitAdmin    int                  `json:"max_limit_admin"`   // Max device limit for admins

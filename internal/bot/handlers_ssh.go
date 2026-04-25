@@ -97,6 +97,9 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 				SetTempValue(chatID, "days", strconv.Itoa(data.GetMaxDaysPublic()))
 				SetTempValue(chatID, "limit", strconv.Itoa(data.GetMaxLimitPublic()))
 			}
+			if data.SSHBanner != "" {
+				return finishSSHCreation(c, b, chatID, lastMsg)
+			}
 			// Pedir título del banner
 			SetUserStep(chatID, "awaiting_ssh_banner_title")
 			markupTitle := &tele.ReplyMarkup{}
@@ -128,6 +131,10 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 			return err
 		}
 		SetTempValue(chatID, "limit", text)
+		data, _ := db.Load()
+		if data.SSHBanner != "" {
+			return finishSSHCreation(c, b, chatID, lastMsg)
+		}
 		// Pedir título del banner
 		SetUserStep(chatID, "awaiting_ssh_banner_title")
 		markupTitle := &tele.ReplyMarkup{}
@@ -204,7 +211,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 				data.SSHTimeUsers[user] = newExpire
 				title := data.SSHBannerTitles[user]
 				limit := sys.GetUserMaxLogins(user)
-				sys.WriteUserBanner(user, title, limit, newExpire)
+				sys.WriteUserBanner(user, title, limit, newExpire, data)
 				sys.SyncSSHDBanners()
 				return nil
 			})
@@ -226,7 +233,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 			data, _ := db.Load()
 			if expire, ok := data.SSHTimeUsers[user]; ok {
 				title := data.SSHBannerTitles[user]
-				sys.WriteUserBanner(user, title, limit, expire)
+				sys.WriteUserBanner(user, title, limit, expire, data)
 				sys.SyncSSHDBanners()
 			}
 			SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Límite cambiado para %s", user), markup)
@@ -347,7 +354,8 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 	if bannerTitle == "" {
 		bannerTitle = "INTERNET ILIMITADO"
 	}
-	sys.WriteUserBanner(user, bannerTitle, limit, expireDate)
+	dataBanner, _ := db.Load()
+	sys.WriteUserBanner(user, bannerTitle, limit, expireDate, dataBanner)
 	sys.SyncSSHDBanners()
 
 	// Respuesta final
@@ -432,6 +440,9 @@ func handleRandomPass(c tele.Context, b *tele.Bot) error {
 		} else {
 			SetTempValue(chatID, "days", strconv.Itoa(data.GetMaxDaysPublic()))
 			SetTempValue(chatID, "limit", strconv.Itoa(data.GetMaxLimitPublic()))
+		}
+		if data.SSHBanner != "" {
+			return finishSSHCreation(c, b, chatID, lastMsg)
 		}
 		// Pedir título del banner
 		SetUserStep(chatID, "awaiting_ssh_banner_title")

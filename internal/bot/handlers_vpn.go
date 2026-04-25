@@ -662,6 +662,42 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Dominio Cloudfront actualizado:</b> <code>%s</code>", domain), markup, tele.ModeHTML)
 		return nil
 
+	case "awaiting_promo_text":
+		db.Update(func(data *db.ConfigData) error {
+			data.BannerPromoText = text
+			return nil
+		})
+		DeleteUserStep(chatID)
+		sys.RefreshAllBanners()
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
+		b.Edit(lastMsg, "✅ <b>Texto Promocional actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
+		return nil
+
+	case "awaiting_promo_channel":
+		db.Update(func(data *db.ConfigData) error {
+			data.BannerPromoChannel = text
+			return nil
+		})
+		DeleteUserStep(chatID)
+		sys.RefreshAllBanners()
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
+		b.Edit(lastMsg, "✅ <b>Canal Promo actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
+		return nil
+
+	case "awaiting_promo_support":
+		db.Update(func(data *db.ConfigData) error {
+			data.BannerPromoSupport = text
+			return nil
+		})
+		DeleteUserStep(chatID)
+		sys.RefreshAllBanners()
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
+		b.Edit(lastMsg, "✅ <b>Soporte Promo actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
+		return nil
+
 	case "awaiting_vpn_ssh_banner":
 		banner := text
 		DeleteUserStep(chatID)
