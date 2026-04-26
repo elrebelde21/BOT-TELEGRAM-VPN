@@ -668,7 +668,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			return nil
 		})
 		DeleteUserStep(chatID)
-		sys.RefreshAllBanners()
+		go sys.RefreshAllBanners()
 		markupBack := &tele.ReplyMarkup{}
 		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
 		b.Edit(lastMsg, "✅ <b>Texto Promocional actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
@@ -680,7 +680,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			return nil
 		})
 		DeleteUserStep(chatID)
-		sys.RefreshAllBanners()
+		go sys.RefreshAllBanners()
 		markupBack := &tele.ReplyMarkup{}
 		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
 		b.Edit(lastMsg, "✅ <b>Canal Promo actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
@@ -692,7 +692,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			return nil
 		})
 		DeleteUserStep(chatID)
-		sys.RefreshAllBanners()
+		go sys.RefreshAllBanners()
 		markupBack := &tele.ReplyMarkup{}
 		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
 		b.Edit(lastMsg, "✅ <b>Soporte Promo actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)

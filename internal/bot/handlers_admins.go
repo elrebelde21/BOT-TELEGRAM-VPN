@@ -413,7 +413,7 @@ func handleBannerDeactivate(c tele.Context, b *tele.Bot) error {
 	exec.Command("sed", "-i", "/^Banner/d", "/etc/ssh/sshd_config").Run()
 
 	// Restaurar banners individuales (Match User)
-	sys.RefreshAllBanners()
+	go sys.RefreshAllBanners()
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("🔙 Volver", "edit_banner")))

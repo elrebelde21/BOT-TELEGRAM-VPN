@@ -339,7 +339,7 @@ func StartBot() {
 		log.Printf("Aviso: No se pudo inicializar el sistema de banners: %v", err)
 	}
 	// Regenerar todos los banners existentes al iniciar
-	sys.RefreshAllBanners()
+	go sys.RefreshAllBanners()
 
 	// Iniciar hilo de auto-limpieza (Rutina concurrente)
 	go sys.AutoCleanupLoop(b)
