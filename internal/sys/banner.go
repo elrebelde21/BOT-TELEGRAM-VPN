@@ -41,6 +41,11 @@ func GenerateUserBanner(username, title string, limit int, expireDate string, da
 		promoSupport = data.BannerPromoSupport
 	}
 
+	promoBotName := "@Depwise_bot"
+	if data != nil && data.BannerPromoBotName != "" {
+		promoBotName = data.BannerPromoBotName
+	}
+
 	// Calcular días restantes
 	daysLeft := 0
 	parsed, err := time.Parse("2006-01-02", expireDate)
@@ -129,7 +134,7 @@ func GenerateUserBanner(username, title string, limit int, expireDate string, da
 
 	// Crédito
 	b.WriteString("<h5 style=\"text-align:center;\">")
-	b.WriteString("<font color='#00e676'><b>✅ CREADO EN : @Depwise_bot</b></font>")
+	b.WriteString(fmt.Sprintf("<font color='#00e676'><b>✅ CREADO EN : %s</b></font>", promoBotName))
 	b.WriteString("</h5>\n")
 
 	// Línea inferior

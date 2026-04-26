@@ -38,6 +38,7 @@ type ConfigData struct {
 	BannerPromoText    string               `json:"banner_promo_text"`
 	BannerPromoChannel string               `json:"banner_promo_channel"`
 	BannerPromoSupport string               `json:"banner_promo_support"`
+	BannerPromoBotName string               `json:"banner_promo_botname"`
 	MaxDaysPublic      int                  `json:"max_days_public"`   // Max days for public user creation
 	MaxLimitPublic   int                  `json:"max_limit_public"`  // Max device limit for public
 	MaxDaysAdmin     int                  `json:"max_days_admin"`    // Max days for admin user creation

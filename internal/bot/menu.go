@@ -259,6 +259,7 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "edit_promo_text"}, func(c tele.Context) error { return handleEditPromoText(c, b) })
 	b.Handle(&tele.Btn{Unique: "edit_promo_channel"}, func(c tele.Context) error { return handleEditPromoChannel(c, b) })
 	b.Handle(&tele.Btn{Unique: "edit_promo_support"}, func(c tele.Context) error { return handleEditPromoSupport(c, b) })
+	b.Handle(&tele.Btn{Unique: "edit_promo_botname"}, func(c tele.Context) error { return handleEditPromoBotName(c, b) })
 	b.Handle(&tele.Btn{Unique: "banner_set_custom"}, func(c tele.Context) error { return handleBannerSetCustom(c, b) })
 	b.Handle(&tele.Btn{Unique: "banner_deactivate"}, func(c tele.Context) error { return handleBannerDeactivate(c, b) })
 	b.Handle(&tele.Btn{Unique: "edit_quotas"}, func(c tele.Context) error { return handleEditQuotas(c, b) })

@@ -348,16 +348,21 @@ func handleEditPromoMenu(c tele.Context, b *tele.Bot) error {
 		promoSupport = data.BannerPromoSupport
 	}
 
+	promoBotName := "@Depwise_bot"
+	if data.BannerPromoBotName != "" {
+		promoBotName = data.BannerPromoBotName
+	}
+
 	markup := &tele.ReplyMarkup{}
-	btnText := markup.Data("📝 Editar Mensaje Promo", "edit_promo_text")
+	btnText := markup.Data("📝 Editar Mensaje", "edit_promo_text")
 	btnChannel := markup.Data("📢 Editar Canal", "edit_promo_channel")
 	btnSupport := markup.Data("👤 Editar Soporte", "edit_promo_support")
+	btnBotName := markup.Data("🤖 Editar Nombre Bot", "edit_promo_botname")
 	btnBack := markup.Data("🔙 Volver", "edit_banner")
 
 	markup.Inline(
-		markup.Row(btnText),
-		markup.Row(btnChannel),
-		markup.Row(btnSupport),
+		markup.Row(btnText, btnChannel),
+		markup.Row(btnSupport, btnBotName),
 		markup.Row(btnBack),
 	)
 
@@ -365,7 +370,8 @@ func handleEditPromoMenu(c tele.Context, b *tele.Bot) error {
 	texto += "Estos textos aparecerán en la parte inferior de los banners de cada usuario.\n\n"
 	texto += fmt.Sprintf("💬 <b>Mensaje Promo:</b>\n<code>%s</code>\n\n", promoText)
 	texto += fmt.Sprintf("📢 <b>Canal:</b>\n<code>%s</code>\n\n", promoChannel)
-	texto += fmt.Sprintf("👤 <b>Soporte:</b>\n<code>%s</code>", promoSupport)
+	texto += fmt.Sprintf("👤 <b>Soporte:</b>\n<code>%s</code>\n\n", promoSupport)
+	texto += fmt.Sprintf("🤖 <b>Creado En:</b>\n✅ CREADO EN : <code>%s</code>", promoBotName)
 
 	return SafeEditCtx(c, b, texto, markup)
 }
@@ -400,6 +406,14 @@ func handleEditPromoSupport(c tele.Context, b *tele.Bot) error {
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_promo_menu")))
 	return SafeEditCtx(c, b, "👤 <b>Editar Soporte Promo</b>\n\n✏️ <i>Escribe tu @usuario de Telegram para soporte (ej: @TuUsuario):</i>", markup)
+}
+
+func handleEditPromoBotName(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_promo_botname")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_promo_menu")))
+	return SafeEditCtx(c, b, "🤖 <b>Editar Nombre del Bot</b>\n\n✏️ <i>Escribe el @usuario de tu bot (ej: @MiSuperVPN_bot):</i>\n\nEl banner mantendrá el prefijo \"✅ CREADO EN : \".", markup)
 }
 
 func handleBannerDeactivate(c tele.Context, b *tele.Bot) error {

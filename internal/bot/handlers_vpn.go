@@ -698,6 +698,18 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		b.Edit(lastMsg, "✅ <b>Soporte Promo actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
 		return nil
 
+	case "awaiting_promo_botname":
+		db.Update(func(data *db.ConfigData) error {
+			data.BannerPromoBotName = text
+			return nil
+		})
+		DeleteUserStep(chatID)
+		go sys.RefreshAllBanners()
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_promo_menu")))
+		b.Edit(lastMsg, "✅ <b>Nombre del Bot actualizado.</b>\nSe aplicó a todos los banners individuales.", markupBack, tele.ModeHTML)
+		return nil
+
 	case "awaiting_vpn_ssh_banner":
 		banner := text
 		DeleteUserStep(chatID)
