@@ -66,12 +66,17 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
 
 ### ¿Cómo funciona?
 
-- Al crear una cuenta SSH, el bot pide un **título personalizado** (con botón rápido "Título Predeterminado")
-- Se genera un archivo HTML en `/etc/ssh_banners/{usuario}.banner`
-- Se configura automáticamente `Match User` en `sshd_config` para que SSH muestre el banner correcto a cada usuario
-- Los **días restantes se actualizan automáticamente** cada 60 segundos
-- Al **renovar** o **cambiar límites**, el banner se regenera
-- Al **eliminar** un usuario, el banner se limpia automáticamente
+### ¿Cómo funciona?
+
+- **Banners Individuales (Por Defecto):**
+  - Al crear una cuenta SSH, el bot pide un **título personalizado** para ese cliente.
+  - Se genera un archivo HTML en `/etc/ssh_banners/{usuario}.banner` con sus días restantes.
+  - Los **textos promocionales** (Canal, Soporte y Mensaje de Venta) se pueden editar directamente desde el menú del bot en *Ajustes Pro -> Banner -> Editar Textos Promo*.
+  - Los **días restantes se actualizan automáticamente** cada 60 segundos.
+  - Al renovar o eliminar un usuario, el banner se regenera o limpia automáticamente.
+- **Banner Global:**
+  - Si prefieres no pedir títulos personalizados para cada usuario, puedes activar el **Banner Global** desde *Ajustes Pro -> Banner*.
+  - Al hacer esto, **el bot omitirá la pregunta del título al crear cuentas SSH** y todos los usuarios verán el mismo banner general.
 
 ---
 
