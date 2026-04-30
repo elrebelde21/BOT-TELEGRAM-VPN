@@ -113,7 +113,7 @@ backend ssh_ws_default_backend
 
 backend bot_ftvpn_backend
     mode tcp
-    server bot_ftvpn_server 127.0.0.1:2222 check
+    server ssh_direct 127.0.0.1:22 check
 
 backend payload_backend
     mode tcp
