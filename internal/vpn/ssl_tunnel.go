@@ -190,7 +190,10 @@ func InstallSSLTunnel(port string) error {
 		installSSHWSInternal()
 	}
 
-	// 8. Validar y reiniciar HAProxy
+	// 8. Aplicar resiliencia (auto-restart + network dependency)
+	EnsureHAProxyResilience()
+
+	// 9. Validar y reiniciar HAProxy
 	if out, err := exec.Command("haproxy", "-c", "-f", configFile).CombinedOutput(); err != nil {
 		return fmt.Errorf("configuración haproxy inválida: %s", string(out))
 	}
@@ -296,6 +299,7 @@ func RemoveSSLTunnel() error {
 	exec.Command("systemctl", "disable", "haproxy").Run()
 	os.Remove("/etc/haproxy/haproxy.cfg")
 	os.Remove("/etc/haproxy/yha.pem")
+	os.RemoveAll("/etc/systemd/system/haproxy.service.d")
 
 	// Limpiar proxy interno
 	exec.Command("systemctl", "stop", "ssh-ws-internal.service").Run()
@@ -305,4 +309,83 @@ func RemoveSSLTunnel() error {
 
 	exec.Command("systemctl", "daemon-reload").Run()
 	return nil
+}
+
+// EnsureHAProxyResilience configura un override de systemd para que HAProxy:
+// - Espere a que la red esté lista antes de iniciar (network-online.target)
+// - Se reinicie automáticamente si muere (Restart=always)
+// - No tenga límite de reintentos (StartLimitIntervalSec=0)
+// Esto corrige que HAProxy quede muerto tras reboots del VPS.
+func EnsureHAProxyResilience() {
+	dir := "/etc/systemd/system/haproxy.service.d"
+	overridePath := dir + "/10-resilience.conf"
+
+	// Si ya existe, asumimos configurado
+	if _, err := os.Stat(overridePath); err == nil {
+		return
+	}
+
+	os.MkdirAll(dir, 0755)
+
+	content := `[Unit]
+After=network-online.target ssh-ws-internal.service
+Wants=network-online.target ssh-ws-internal.service
+
+[Service]
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=0
+ExecStartPre=/bin/mkdir -p /run/haproxy
+`
+	os.WriteFile(overridePath, []byte(content), 0644)
+	exec.Command("systemctl", "daemon-reload").Run()
+}
+
+// EnsureHAProxyRunning verifica que HAProxy y ssh-ws-internal estén corriendo.
+// Se llama al iniciar el bot para recuperar servicios caídos tras un reboot.
+// Pasos:
+//  1. Verificar que la config y el certificado existen
+//  2. Recrear /run/haproxy si se borró (tmpfs se pierde en reboot)
+//  3. Aplicar resiliencia si no estaba configurada
+//  4. Asegurar que ssh-ws-internal (backend) esté corriendo
+//  5. Matar procesos invasores en los puertos de HAProxy
+//  6. Reiniciar HAProxy si no está activo
+func EnsureHAProxyRunning() {
+	// Solo actuar si HAProxy está realmente instalado
+	if _, err := os.Stat("/etc/haproxy/haproxy.cfg"); err != nil {
+		return
+	}
+	if _, err := os.Stat("/etc/haproxy/yha.pem"); err != nil {
+		return
+	}
+
+	// 1. Recrear directorio del socket (se pierde con tmpfs en reboot)
+	os.MkdirAll("/run/haproxy", 0755)
+
+	// 2. Aplicar override de resiliencia si no se había hecho
+	EnsureHAProxyResilience()
+
+	// 3. Asegurar que el backend ssh-ws-internal esté corriendo
+	if exec.Command("systemctl", "is-active", "--quiet", "ssh-ws-internal.service").Run() != nil {
+		// El servicio existe pero no está activo, intentar reiniciar
+		if _, err := os.Stat("/etc/systemd/system/ssh-ws-internal.service"); err == nil {
+			exec.Command("systemctl", "restart", "ssh-ws-internal.service").Run()
+		} else {
+			// El unit file se perdió, recrear
+			installSSHWSInternal()
+		}
+	}
+
+	// 4. Verificar si HAProxy ya está activo
+	if exec.Command("systemctl", "is-active", "--quiet", "haproxy").Run() == nil {
+		return // Ya está corriendo correctamente
+	}
+
+	// 5. HAProxy está caído — matar procesos invasores en sus puertos
+	exec.Command("bash", "-c", "fuser -k 80/tcp 2>/dev/null || true").Run()
+	exec.Command("bash", "-c", "fuser -k 443/tcp 2>/dev/null || true").Run()
+	exec.Command("bash", "-c", "fuser -k 8080/tcp 2>/dev/null || true").Run()
+
+	// 6. Reiniciar HAProxy
+	exec.Command("systemctl", "restart", "haproxy").Run()
 }

@@ -335,6 +335,12 @@ func StartBot() {
 	// Restaurar reglas de iptables que se borran al reiniciar (SlowDNS, ZiVPN)
 	vpn.RestoreIptablesRules()
 
+	// Verificar y reiniciar HAProxy si quedó caído tras un reboot del VPS
+	if initSSL, _ := db.Load(); initSSL.SSLTunnel != "" {
+		vpn.EnsureHAProxyRunning()
+		log.Println("HAProxy: verificado y restaurado correctamente")
+	}
+
 	// Restaurar contraseñas ZiVPN en config.json tras reinicio de VPS
 	if initZivpn, _ := db.Load(); initZivpn.Zivpn && len(initZivpn.ZivpnUsers) > 0 {
 		var passwords []string
