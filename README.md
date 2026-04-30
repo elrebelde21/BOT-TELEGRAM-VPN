@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/OS-Ubuntu%2024.04-E95420?style=for-the-badge&logo=ubuntu" alt="Ubuntu 24.04">
   <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux" alt="Linux">
   <img src="https://img.shields.io/badge/Status-Stable-success?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/Version-7.2-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-7.3-blue?style=for-the-badge" alt="Version">
 </p>
 
 ---
@@ -16,7 +16,32 @@
 
 ---
 
-## 🆕 Novedades v7.2 — Banner SSH Dinámico por Usuario
+## 🆕 Novedades v7.3 — Resiliencia HAProxy + Fix SSL/TLS Directo
+
+### 🔒 HAProxy Auto-Recovery tras Reboot
+
+HAProxy ahora **sobrevive cualquier reinicio del VPS** de forma automática gracias a:
+
+| Mecanismo | Descripción |
+|-----------|-------------|
+| **Systemd Override** | `Restart=always` + `StartLimitIntervalSec=0` para reinicio ilimitado |
+| **Network Dependency** | `After=network-online.target` — espera a que la red esté lista |
+| **Socket Directory** | `ExecStartPre=/bin/mkdir -p /run/haproxy` — recrea el directorio tmpfs perdido en reboot |
+| **Bot Startup Check** | Al iniciar, el bot verifica HAProxy, mata procesos invasores en 80/443/8080 y reinicia si es necesario |
+| **Backend Recovery** | También verifica y reinicia `ssh-ws-internal` (puerto 10015) automáticamente |
+
+### 📱 Fix SSL/TLS Directo (HTTP Injector)
+
+Corregido el modo **SSL/TLS → SSH** en HTTP Injector. El tráfico SSH directo (sin WebSocket) ahora se enruta correctamente a OpenSSH puerto 22 en lugar del antiguo puerto 2222 (Dropbear).
+
+**Flujo corregido:**
+```
+HTTP Injector (SSL/TLS) → HAProxy(443 TLS) → detecta SSH-2.0 → OpenSSH(22) ✅
+```
+
+---
+
+## 📋 Novedades v7.2 — Banner SSH Dinámico por Usuario
 
 Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** que se muestra al conectarse, compatible con **HTTP Injector**, **HTTP Custom**, **HA Tunnel** y todas las apps VPN.
 
@@ -106,7 +131,8 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
 
 ### 🧹 Mantenimiento Inteligente
 - **Persistencia de Datos Inquebrantable:** Tu tráfico de red y configuraciones de usuario están a salvo ante cualquier reinicio.
-- **Resiliencia de Servicios:** Recuperación automática de protocolos mediante systemd (`Restart=always`).
+- **Resiliencia de Servicios:** Recuperación automática de HAProxy, Xray y ssh-ws-internal mediante systemd overrides (`Restart=always`, `network-online.target`).
+- **HAProxy Auto-Recovery:** Al iniciar el bot, verifica que HAProxy esté corriendo, recrea `/run/haproxy`, mata procesos invasores en puertos 80/443/8080 y reinicia si es necesario.
 - **Deep System Cleanup:** Liberación automática de memoria y procesos huérfanos.
 
 ---
@@ -235,11 +261,52 @@ nano /opt/depwise_bot/credentials.json
 | Síntoma | Causa Probable | Solución |
 | :--- | :--- | :--- |
 | **El bot no responde** | OOM mató el proceso o token inválido | `systemctl status depwise` → `systemctl restart depwise` |
-| **Xray/VMess no conecta** | HAProxy o Xray no iniciaron | `systemctl status haproxy` → Reinstalar desde Protocolos |
+| **Puerto 443 no responde tras reboot** | HAProxy caído o `/run/haproxy` borrado | Ver sección "Fix HAProxy" abajo |
+| **HTTP Injector no conecta (SSL/TLS)** | Backend apuntaba a Dropbear (2222) | Actualizar bot — fix incluido en v7.3 |
+| **Xray/VMess no conecta** | HAProxy o Xray no iniciaron | `systemctl status haproxy xray` |
 | **VPS muy lenta** | RAM saturada | Activar **Auto Reboot** en Ajustes Pro |
 | **Banner no aparece** | sshd no recargó | `systemctl reload ssh` o recrear la cuenta |
 | **Error en Google Drive** | Token expirado/revocado | Enviar `/authdrive` de nuevo al bot |
 | **Escáner no funciona** | Herramientas no instaladas | Ir a **Protocolos → 🔍 Escaner → 📥 Instalar Todo** |
+
+### 🔒 Fix HAProxy / Puerto 443 Caído
+
+Si el puerto 443 no responde después de un reinicio del VPS:
+
+```bash
+# 1. Diagnosticar estado
+systemctl status haproxy --no-pager
+ss -tlnp | grep -E ':443|:80|:8080'
+systemctl status ssh-ws-internal --no-pager
+
+# 2. Fix rápido manual
+mkdir -p /run/haproxy
+fuser -k 443/tcp 2>/dev/null
+systemctl restart ssh-ws-internal
+systemctl restart haproxy
+
+# 3. Verificar que todo funciona
+ss -tlnp | grep haproxy
+echo | openssl s_client -connect 127.0.0.1:443 2>&1 | grep CONNECTED
+```
+
+> [!NOTE]
+> En la versión 7.3+, el bot aplica automáticamente un **override de systemd** que hace que HAProxy se auto-reinicie tras cualquier reboot. Si acabas de actualizar, el fix se aplica al primer arranque del bot.
+
+### 📱 Verificar Conexión SSL para HTTP Injector
+
+```bash
+# Test completo de la cadena SSL → WebSocket → SSH
+# 1. SSL handshake
+echo | openssl s_client -connect 127.0.0.1:443 -servername localhost 2>&1 | grep -E "CONNECTED|subject"
+
+# 2. WebSocket upgrade (simula HTTP Injector)
+echo -e "GET / HTTP/1.1\r\nHost: localhost\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n" | timeout 3 nc 127.0.0.1 10015
+
+# Resultado esperado:
+# HTTP/1.1 101 Switching Protocols
+# SSH-2.0-OpenSSH_9.6p1
+```
 
 ### Comandos Útiles de Diagnóstico
 
@@ -253,11 +320,22 @@ journalctl -u depwise -f --no-pager -n 50
 # Reiniciar bot
 systemctl restart depwise
 
+# Estado completo de servicios VPN
+for svc in depwise haproxy ssh-ws-internal xray ssh-ws; do
+  echo -n "$svc: "; systemctl is-active $svc 2>/dev/null || echo "not found"
+done
+
+# Puertos en uso
+ss -tlnp | grep -E ':22|:80|:443|:8080|:10015'
+
 # Verificar banners de usuarios
 ls -la /etc/ssh_banners/
 
 # Ver configuración SSH (Match User blocks)
 grep -A1 "Match User" /etc/ssh/sshd_config
+
+# Logs de HAProxy
+journalctl -u haproxy --no-pager -n 20
 ```
 
 ---
