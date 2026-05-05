@@ -45,6 +45,11 @@ type ConfigData struct {
 	MaxLimitAdmin    int                  `json:"max_limit_admin"`   // Max device limit for admins
 	MaxXrayPublic    int                  `json:"max_xray_public"`   // Max VMess accounts for public
 	MaxXrayAdmin     int                  `json:"max_xray_admin"`    // Max VMess accounts for admins
+	MaxSSHPublic     int                  `json:"max_ssh_public"`    // Max SSH accounts for public
+	MaxSSHAdmin      int                  `json:"max_ssh_admin"`     // Max SSH accounts for admins
+	MaxZivpnPublic   int                  `json:"max_zivpn_public"`  // Max ZiVPN accounts for public
+	MaxZivpnAdmin    int                  `json:"max_zivpn_admin"`   // Max ZiVPN accounts for admins
+	BannedUsers      map[string]BannedUserInfo `json:"banned_users"` // chatID -> BannedUserInfo
 	SysRXLast        uint64               `json:"sys_rx_last"`
 	SysTXLast        uint64               `json:"sys_tx_last"`
 	SysRXTotal       uint64               `json:"sys_rx_total"`
@@ -69,6 +74,12 @@ type XrayUser struct {
 
 type AdminInfo struct {
 	Alias string `json:"alias"`
+}
+
+type BannedUserInfo struct {
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
+	Date   string `json:"date"`
 }
 
 type ProxyDTConfig struct {
@@ -124,6 +135,9 @@ func loadUnlocked() (*ConfigData, error) {
 	// Inicializaciones de seguridad para mapas nulos
 	if data.Admins == nil {
 		data.Admins = make(map[string]AdminInfo)
+	}
+	if data.BannedUsers == nil {
+		data.BannedUsers = make(map[string]BannedUserInfo)
 	}
 	if data.SSHOwners == nil {
 		data.SSHOwners = make(map[string]string)
@@ -209,6 +223,38 @@ func (d *ConfigData) GetMaxXrayAdmin() int {
 	return d.MaxXrayAdmin
 }
 
+// GetMaxSSHPublic returns max SSH accounts for public users (default 1)
+func (d *ConfigData) GetMaxSSHPublic() int {
+	if d.MaxSSHPublic <= 0 {
+		return 1
+	}
+	return d.MaxSSHPublic
+}
+
+// GetMaxSSHAdmin returns max SSH accounts for admins (default 5)
+func (d *ConfigData) GetMaxSSHAdmin() int {
+	if d.MaxSSHAdmin <= 0 {
+		return 5
+	}
+	return d.MaxSSHAdmin
+}
+
+// GetMaxZivpnPublic returns max ZiVPN accounts for public users (default 1)
+func (d *ConfigData) GetMaxZivpnPublic() int {
+	if d.MaxZivpnPublic <= 0 {
+		return 1
+	}
+	return d.MaxZivpnPublic
+}
+
+// GetMaxZivpnAdmin returns max ZiVPN accounts for admins (default 5)
+func (d *ConfigData) GetMaxZivpnAdmin() int {
+	if d.MaxZivpnAdmin <= 0 {
+		return 5
+	}
+	return d.MaxZivpnAdmin
+}
+
 // Save guarda la memoria en el archivo bot_data.json
 func Save(data *ConfigData) error {
 	mutex.Lock()
@@ -249,6 +295,7 @@ func saveUnlocked(data *ConfigData) error {
 func defaultData() *ConfigData {
 	return &ConfigData{
 		Admins:       make(map[string]AdminInfo),
+		BannedUsers:  make(map[string]BannedUserInfo),
 		ExtraInfo:    "Puertos: 22, 80, 443",
 		PublicAccess: true,
 		SSHOwners:    make(map[string]string),

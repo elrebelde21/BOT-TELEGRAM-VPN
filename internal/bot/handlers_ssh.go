@@ -15,6 +15,27 @@ import (
 
 func handleCrearSSH(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
+	data, _ := db.Load()
+
+	if !isSuperAdminID(chatID) {
+		maxAccounts := data.GetMaxSSHPublic()
+		if isAdmin(chatID) {
+			maxAccounts = data.GetMaxSSHAdmin()
+		}
+
+		currentCount := 0
+		for _, ownerID := range data.SSHOwners {
+			if ownerID == fmt.Sprintf("%d", chatID) {
+				currentCount++
+			}
+		}
+
+		if currentCount >= maxAccounts {
+			markup := &tele.ReplyMarkup{}
+			markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
+			return SafeEditCtx(c, b, fmt.Sprintf("⚠️ <b>Límite Alcanzado</b>\n\nYa tienes <code>%d/%d</code> cuentas SSH activas.\nNo puedes crear más hasta que se elimine o expire alguna.", currentCount, maxAccounts), markup)
+		}
+	}
 
 	// 1. Iniciar registro de estado
 	SetUserStep(chatID, "awaiting_ssh_username")
@@ -49,7 +70,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		lastMsg := GetLastBotMsg(chatID)
 		return processZivpnSteps(step, text, chatID, c, b, lastMsg)
 	}
-	if strings.HasPrefix(step, "awaiting_vpn_") || strings.HasPrefix(step, "awaiting_quota_") || strings.HasPrefix(step, "awaiting_rename_") || strings.HasPrefix(step, "awaiting_promo_") {
+	if strings.HasPrefix(step, "awaiting_vpn_") || strings.HasPrefix(step, "awaiting_quota_") || strings.HasPrefix(step, "awaiting_rename_") || strings.HasPrefix(step, "awaiting_promo_") || strings.HasPrefix(step, "awaiting_ban_") {
 		lastMsg := GetLastBotMsg(chatID)
 		return processVPNSteps(step, text, chatID, c, b, lastMsg)
 	}

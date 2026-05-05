@@ -111,6 +111,31 @@ func StartBot() {
 		return
 	}
 
+	// Middleware de Baneo
+	b.Use(func(next tele.HandlerFunc) tele.HandlerFunc {
+		return func(c tele.Context) error {
+			if c.Sender() != nil {
+				chatID := fmt.Sprintf("%d", c.Sender().ID)
+				data, errLoad := db.Load()
+				if errLoad == nil {
+					if info, banned := data.BannedUsers[chatID]; banned {
+						// Ignorar si es SuperAdmin (protección extra)
+						if !isSuperAdminID(c.Sender().ID) {
+							if c.Callback() != nil {
+								return c.Respond(&tele.CallbackResponse{
+									Text:      "🚫 ESTÁS BANEADO: " + info.Reason,
+									ShowAlert: true,
+								})
+							}
+							return c.Send("🚫 <b>ESTÁS BANEADO</b>\n\nMotivo: <i>" + info.Reason + "</i>", tele.ModeHTML)
+						}
+					}
+				}
+			}
+			return next(c)
+		}
+	})
+
 	// Handlers
 	b.Handle("/start", func(c tele.Context) error {
 		return handleStart(c, b)
@@ -244,6 +269,7 @@ func StartBot() {
 	b.Handle("\fdel_adm_exec", func(c tele.Context) error { return handleDelAdminExec(c, b) })
 	b.Handle("\fdel_xray_exec", func(c tele.Context) error { return handleDeleteXrayExec(c, b) })
 	b.Handle("\frename_adm_sel", func(c tele.Context) error { return handleRenameAdminSelect(c, b) })
+	b.Handle("\funban_user", func(c tele.Context) error { return handleUnbanUser(c, b) })
 	b.Handle(&tele.Btn{Unique: "rename_admin_menu"}, func(c tele.Context) error { return handleRenameAdminMenu(c, b) })
 
 	// Ajustes Pro
@@ -281,6 +307,18 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "quota_xray_admin"}, func(c tele.Context) error {
 		return handleQuotaPrompt(c, b, "awaiting_quota_xray_admin", "Máx cuentas VMess para Admins")
 	})
+	b.Handle(&tele.Btn{Unique: "quota_ssh_public"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_ssh_public", "Límite máx de cuentas SSH (Público)")
+	})
+	b.Handle(&tele.Btn{Unique: "quota_ssh_admin"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_ssh_admin", "Límite máx de cuentas SSH (Admins)")
+	})
+	b.Handle(&tele.Btn{Unique: "quota_zivpn_public"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_zivpn_public", "Límite máx de cuentas ZiVPN (Público)")
+	})
+	b.Handle(&tele.Btn{Unique: "quota_zivpn_admin"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_zivpn_admin", "Límite máx de cuentas ZiVPN (Admins)")
+	})
 	b.Handle(&tele.Btn{Unique: "reset_history"}, func(c tele.Context) error { return handleResetHistoryConfirm(c, b) })
 	b.Handle(&tele.Btn{Unique: "reset_history_exec"}, func(c tele.Context) error { return handleResetHistoryExec(c, b) })
 	b.Handle(&tele.Btn{Unique: "reboot_vps_confirm"}, func(c tele.Context) error { return handleServerRebootConfirm(c, b) })
@@ -288,6 +326,8 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "toggle_public_scanner"}, func(c tele.Context) error { return handleTogglePublicScanner(c, b) })
 	b.Handle(&tele.Btn{Unique: "menu_autoreboot"}, func(c tele.Context) error { return handleAutoRebootMenu(c, b) })
 	b.Handle(&tele.Btn{Unique: "toggle_autoreboot"}, func(c tele.Context) error { return handleToggleAutoReboot(c, b) })
+	b.Handle(&tele.Btn{Unique: "menu_bans"}, func(c tele.Context) error { return handleMenuBans(c, b) })
+	b.Handle(&tele.Btn{Unique: "ban_user_prompt"}, func(c tele.Context) error { return handleBanUserPrompt(c, b) })
 
 	// Drive Backups
 	b.Handle("/authdrive", func(c tele.Context) error { return handleAuthDrive(c, b) })

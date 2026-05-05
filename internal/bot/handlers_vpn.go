@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/sys"
@@ -728,7 +729,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		}
 		return nil
 
-	case "awaiting_quota_days_public", "awaiting_quota_limit_public", "awaiting_quota_days_admin", "awaiting_quota_limit_admin", "awaiting_quota_xray_public", "awaiting_quota_xray_admin":
+	case "awaiting_quota_days_public", "awaiting_quota_limit_public", "awaiting_quota_days_admin", "awaiting_quota_limit_admin", "awaiting_quota_xray_public", "awaiting_quota_xray_admin", "awaiting_quota_ssh_public", "awaiting_quota_ssh_admin", "awaiting_quota_zivpn_public", "awaiting_quota_zivpn_admin":
 		val, err := strconv.Atoi(text)
 		if err != nil || val <= 0 {
 			markupRetry := &tele.ReplyMarkup{}
@@ -759,6 +760,18 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			case "awaiting_quota_xray_admin":
 				data.MaxXrayAdmin = val
 				label = fmt.Sprintf("VMess Admin → %d cuentas", val)
+			case "awaiting_quota_ssh_public":
+				data.MaxSSHPublic = val
+				label = fmt.Sprintf("Límite SSH Público → %d cuentas", val)
+			case "awaiting_quota_ssh_admin":
+				data.MaxSSHAdmin = val
+				label = fmt.Sprintf("Límite SSH Admin → %d cuentas", val)
+			case "awaiting_quota_zivpn_public":
+				data.MaxZivpnPublic = val
+				label = fmt.Sprintf("Límite ZiVPN Público → %d cuentas", val)
+			case "awaiting_quota_zivpn_admin":
+				data.MaxZivpnAdmin = val
+				label = fmt.Sprintf("Límite ZiVPN Admin → %d cuentas", val)
 			}
 			return nil
 		})
@@ -766,6 +779,59 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		markupBack := &tele.ReplyMarkup{}
 		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "edit_quotas")))
 		SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ <b>Cuota actualizada:</b> %s", label), markupBack)
+		return nil
+
+	case "awaiting_ban_id":
+		id := strings.TrimSpace(text)
+		if _, err := strconv.ParseInt(id, 10, 64); err != nil {
+			markupRetry := &tele.ReplyMarkup{}
+			markupRetry.Inline(markupRetry.Row(markupRetry.Data("❌ Cancelar", "menu_bans")))
+			SafeEdit(chatID, b, lastMsg, "❌ <b>ID Inválido:</b> Debe ser un número. Intenta de nuevo:", markupRetry)
+			return nil
+		}
+		SetTempValue(chatID, "ban_target_id", id)
+		SetUserStep(chatID, "awaiting_ban_name")
+		
+		markupCancel := &tele.ReplyMarkup{}
+		markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "menu_bans")))
+		SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ ID: <code>%s</code>\n\n📝 <b>Paso 2/3:</b> Escribe el <b>Nombre o Alias</b> del usuario para identificarlo en la lista:", id), markupCancel)
+		return nil
+
+	case "awaiting_ban_name":
+		name := strings.TrimSpace(text)
+		if name == "" {
+			name = "Desconocido"
+		}
+		SetTempValue(chatID, "ban_target_name", name)
+		SetUserStep(chatID, "awaiting_ban_reason")
+		
+		markupCancel := &tele.ReplyMarkup{}
+		markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "menu_bans")))
+		SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Nombre: <b>%s</b>\n\n📝 <b>Paso 3/3:</b> Escribe el <b>Motivo del Ban</b> (ej: Spam, No pago, etc.):\n\n<i>O escribe 'Ninguno' para omitir.</i>", name), markupCancel)
+		return nil
+
+	case "awaiting_ban_reason":
+		reason := strings.TrimSpace(text)
+		id := GetTempValue(chatID, "ban_target_id")
+		name := GetTempValue(chatID, "ban_target_name")
+		DeleteUserStep(chatID)
+
+		if reason == "" || strings.ToLower(reason) == "ninguno" {
+			reason = "No especificado"
+		}
+
+		db.Update(func(data *db.ConfigData) error {
+			data.BannedUsers[id] = db.BannedUserInfo{
+				Name:   name,
+				Reason: reason,
+				Date:   time.Now().Format("2006-01-02"),
+			}
+			return nil
+		})
+
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "menu_bans")))
+		SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ <b>Usuario Baneado Exitosamente</b>\n\n👤 <b>%s</b>\n🆔 ID: <code>%s</code>\n📝 Motivo: <i>%s</i>\n\nEl usuario ya no podrá interactuar con el bot.", name, id, reason), markupBack)
 		return nil
 
 	case "awaiting_vpn_slowdns_domain":

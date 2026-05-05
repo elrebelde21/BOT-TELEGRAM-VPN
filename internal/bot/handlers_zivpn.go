@@ -22,6 +22,26 @@ func handleCrearZivpn(c tele.Context, b *tele.Bot) error {
 		return c.Edit("⛔ <b>ACCESO DENEGADO</b>", tele.ModeHTML)
 	}
 
+	if !isSuperAdminID(chatID) {
+		maxAccounts := data.GetMaxZivpnPublic()
+		if isAdmin(chatID) {
+			maxAccounts = data.GetMaxZivpnAdmin()
+		}
+
+		currentCount := 0
+		for _, ownerID := range data.ZivpnOwners {
+			if ownerID == fmt.Sprintf("%d", chatID) {
+				currentCount++
+			}
+		}
+
+		if currentCount >= maxAccounts {
+			markup := &tele.ReplyMarkup{}
+			markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
+			return SafeEditCtx(c, b, fmt.Sprintf("⚠️ <b>Límite Alcanzado</b>\n\nYa tienes <code>%d/%d</code> cuentas ZiVPN activas.\nNo puedes crear más hasta que se elimine o expire alguna.", currentCount, maxAccounts), markup)
+		}
+	}
+
 	SetUserStep(chatID, "awaiting_zivpn_pass")
 	SetTempData(chatID, make(map[string]string))
 	lastMsg := GetLastBotMsg(chatID)

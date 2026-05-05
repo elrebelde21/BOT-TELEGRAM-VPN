@@ -46,6 +46,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 	btnBack := markup.Data("🔙 Volver", "back_main")
 
 	btnQuotas := markup.Data("📊 Cuotas Creación", "edit_quotas")
+	btnBans := markup.Data("🚫 Gestión Bans", "menu_bans")
 
 	markup.Inline(
 		markup.Row(btnToggle),
@@ -54,8 +55,9 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnInfo),
 		markup.Row(btnCloudflare, btnCloudfront),
 		markup.Row(btnBanner, btnQuotas),
+		markup.Row(btnBans, btnScanToggle),
 		markup.Row(btnBackup, btnRestore),
-		markup.Row(btnReset, btnScanToggle),
+		markup.Row(btnReset),
 		markup.Row(btnAutoReboot, btnReboot),
 		markup.Row(btnBack),
 	)
@@ -92,6 +94,10 @@ func handleEditQuotas(c tele.Context, b *tele.Bot) error {
 	btnLimitPub := markup.Data(fmt.Sprintf("📱 Disp. Público: %d", data.GetMaxLimitPublic()), "quota_limit_public")
 	btnDaysAdm := markup.Data(fmt.Sprintf("📅 Días Admin: %d", data.GetMaxDaysAdmin()), "quota_days_admin")
 	btnLimitAdm := markup.Data(fmt.Sprintf("📱 Disp. Admin: %d", data.GetMaxLimitAdmin()), "quota_limit_admin")
+	btnSSHPublic := markup.Data(fmt.Sprintf("👤 Max SSH Público: %d", data.GetMaxSSHPublic()), "quota_ssh_public")
+	btnSSHAdmin := markup.Data(fmt.Sprintf("👤 Max SSH Admin: %d", data.GetMaxSSHAdmin()), "quota_ssh_admin")
+	btnZivpnPublic := markup.Data(fmt.Sprintf("🛰️ Max ZiVPN Público: %d", data.GetMaxZivpnPublic()), "quota_zivpn_public")
+	btnZivpnAdmin := markup.Data(fmt.Sprintf("🛰️ Max ZiVPN Admin: %d", data.GetMaxZivpnAdmin()), "quota_zivpn_admin")
 	btnXrayPub := markup.Data(fmt.Sprintf("💎 VMess Público: %d", data.GetMaxXrayPublic()), "quota_xray_public")
 	btnXrayAdm := markup.Data(fmt.Sprintf("💎 VMess Admin: %d", data.GetMaxXrayAdmin()), "quota_xray_admin")
 	btnBack := markup.Data("🔙 Volver", "menu_admins")
@@ -99,19 +105,27 @@ func handleEditQuotas(c tele.Context, b *tele.Bot) error {
 	markup.Inline(
 		markup.Row(btnDaysPub, btnLimitPub),
 		markup.Row(btnDaysAdm, btnLimitAdm),
+		markup.Row(btnSSHPublic, btnSSHAdmin),
+		markup.Row(btnZivpnPublic, btnZivpnAdmin),
 		markup.Row(btnXrayPub, btnXrayAdm),
 		markup.Row(btnBack),
 	)
 
 	texto := "📊 <b>Cuotas de Creación de Usuarios</b>\n"
 	texto += "━━━━━━━━━━━━━━\n"
-	texto += fmt.Sprintf("👥 <b>Público SSH:</b> %d días / %d dispositivos\n", data.GetMaxDaysPublic(), data.GetMaxLimitPublic())
-	texto += fmt.Sprintf("👤 <b>Admin SSH:</b> %d días / %d dispositivos\n", data.GetMaxDaysAdmin(), data.GetMaxLimitAdmin())
+	texto += fmt.Sprintf("👥 <b>Público SSH (Params):</b> %d días / %d dispositivos\n", data.GetMaxDaysPublic(), data.GetMaxLimitPublic())
+	texto += fmt.Sprintf("👤 <b>Admin SSH (Params):</b> %d días / %d dispositivos\n", data.GetMaxDaysAdmin(), data.GetMaxLimitAdmin())
+	texto += "━━━━━━━━━━━━━━\n"
+	texto += fmt.Sprintf("👤 <b>Límite Cuentas SSH Público:</b> máx %d\n", data.GetMaxSSHPublic())
+	texto += fmt.Sprintf("👤 <b>Límite Cuentas SSH Admin:</b> máx %d\n", data.GetMaxSSHAdmin())
+	texto += "━━━━━━━━━━━━━━\n"
+	texto += fmt.Sprintf("🛰️ <b>Límite Cuentas ZiVPN Público:</b> máx %d\n", data.GetMaxZivpnPublic())
+	texto += fmt.Sprintf("🛰️ <b>Límite Cuentas ZiVPN Admin:</b> máx %d\n", data.GetMaxZivpnAdmin())
 	texto += "━━━━━━━━━━━━━━\n"
 	texto += fmt.Sprintf("💎 <b>VMess Público:</b> máx %d cuentas\n", data.GetMaxXrayPublic())
 	texto += fmt.Sprintf("💎 <b>VMess Admin:</b> máx %d cuentas\n", data.GetMaxXrayAdmin())
 	texto += "━━━━━━━━━━━━━━\n"
-	texto += "<i>Estos valores se aplican al crear usuarios SSH y VMess.\nEl SuperAdmin no tiene límites.</i>"
+	texto += "<i>Estos valores se aplican al crear usuarios SSH, ZiVPN y VMess.\nEl SuperAdmin no tiene límites.</i>"
 
 	return SafeEditCtx(c, b, texto, markup)
 }
@@ -506,5 +520,50 @@ func handleToggleAutoReboot(c tele.Context, b *tele.Bot) error {
 		return nil
 	})
 	return handleAutoRebootMenu(c, b)
+}
+
+func handleMenuBans(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	markup := &tele.ReplyMarkup{}
+	
+	btnBanUser := markup.Data("➕ Banear Usuario", "ban_user_prompt")
+	btnBack := markup.Data("🔙 Volver", "menu_admins")
+	
+	var rows []tele.Row
+	rows = append(rows, markup.Row(btnBanUser))
+	
+	texto := "🚫 <b>GESTIÓN DE USUARIOS BANEADOS</b>\n━━━━━━━━━━━━━━\n"
+	if len(data.BannedUsers) == 0 {
+		texto += "<i>No hay usuarios baneados.</i>\n\n"
+	} else {
+		texto += "<i>Selecciona un usuario para quitarle el Ban:</i>\n\n"
+		for id, info := range data.BannedUsers {
+			rows = append(rows, markup.Row(markup.Data(fmt.Sprintf("✅ Desbanear a %s", info.Name), "unban_user", id)))
+			texto += fmt.Sprintf("👤 <b>%s</b>\n🆔 ID: <code>%s</code>\n📝 Motivo: <i>%s</i>\n📅 Fecha: %s\n\n", info.Name, id, info.Reason, info.Date)
+		}
+	}
+	
+	rows = append(rows, markup.Row(btnBack))
+	markup.Inline(rows...)
+	
+	return SafeEditCtx(c, b, texto, markup)
+}
+
+func handleBanUserPrompt(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	SetUserStep(chatID, "awaiting_ban_id")
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_bans")))
+	return SafeEditCtx(c, b, "➕ <b>Banear Usuario</b>\n\n📝 <b>Paso 1/3:</b> Escribe el <b>ID numérico</b> del usuario de Telegram que deseas banear:", markup)
+}
+
+func handleUnbanUser(c tele.Context, b *tele.Bot) error {
+	id := c.Data()
+	db.Update(func(data *db.ConfigData) error {
+		delete(data.BannedUsers, id)
+		return nil
+	})
+	c.Respond(&tele.CallbackResponse{Text: "✅ Usuario desbaneado", ShowAlert: true})
+	return handleMenuBans(c, b)
 }
 
