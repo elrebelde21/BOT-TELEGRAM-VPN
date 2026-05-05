@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/OS-Ubuntu%2024.04-E95420?style=for-the-badge&logo=ubuntu" alt="Ubuntu 24.04">
   <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux" alt="Linux">
   <img src="https://img.shields.io/badge/Status-Stable-success?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/Version-7.5-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-7.7-blue?style=for-the-badge" alt="Version">
 </p>
 
 ---
@@ -13,6 +13,12 @@
 ## 🚀 ¿Qué es Depwise Bot?
 
 **Depwise Bot Go Edition** es una solución integral y de alto rendimiento para la gestión de servidores VPN y cuentas SSH a través de Telegram. Reescrito completamente en **Go** para garantizar velocidad, estabilidad y bajo consumo de recursos, este bot transforma tu VPS en un panel de control profesional y automatizado.
+
+---
+
+## 🚀 Novedades v7.7 — Modo Desarrollador y Forzado de Actualizaciones
+- Se añadió un botón "⚠️ Forzar Reinstalación (Dev)" que permite reinstalar completamente el repositorio en cualquier momento, ignorando verificaciones de versión.
+- El motor interno del actualizador automático (`systemd-run`) fue reescrito para escapar limpiamente de los cgroups, garantizando un índice de éxito del 100% al auto-compilarse.
 
 ---
 
