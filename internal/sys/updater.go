@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 const (
 	// CurrentVersion indica la versión actual en ejecución
-	CurrentVersion = "7.5"
+	CurrentVersion = "7.6"
 	// RemoteVersionURL es el archivo en GitHub que dice la última versión disponible
 	RemoteVersionURL = "https://raw.githubusercontent.com/Depwisescript/BOT-TELEGRAM-VPN/main/version.txt"
 )
@@ -64,15 +65,28 @@ func CheckForUpdate() (bool, string, error) {
 // RunUpdate lanza el proceso de actualización en segundo plano.
 // Desvincula el proceso del bot para que sobreviva al reinicio del servicio.
 func RunUpdate() error {
-	// Usamos systemd-run para asegurar que el proceso sobrevive al systemctl restart depwise
-	// El comando simulará un "1" por teclado para que install_go.sh haga la opción 1.
-	cmdStr := `sleep 2 && echo "1" | bash <(curl -sL https://raw.githubusercontent.com/Depwisescript/BOT-TELEGRAM-VPN/main/install_go.sh)`
-	
-	cmd := exec.Command("systemd-run", "--unit=depwise-updater", "bash", "-c", cmdStr)
-	err := cmd.Start()
+	updateScript := `#!/bin/bash
+sleep 2
+cd /tmp
+rm -rf BOT-TELEGRAM-VPN
+git clone https://github.com/Depwisescript/BOT-TELEGRAM-VPN.git
+cd BOT-TELEGRAM-VPN
+export PATH=$PATH:/usr/local/go/bin
+go mod tidy
+go build -o /usr/local/bin/depwise-bot cmd/depwise/main.go
+systemctl restart depwise
+`
+	err := os.WriteFile("/tmp/depwise_update.sh", []byte(updateScript), 0755)
+	if err != nil {
+		return fmt.Errorf("error creando script de actualización: %v", err)
+	}
+
+	unitName := fmt.Sprintf("depwise-updater-%d", time.Now().Unix())
+	cmd := exec.Command("systemd-run", "--unit="+unitName, "/tmp/depwise_update.sh")
+	err = cmd.Start()
 	if err != nil {
 		// Fallback por si systemd-run falla
-		cmdFallback := exec.Command("sh", "-c", `nohup bash -c '`+cmdStr+`' > /dev/null 2>&1 &`)
+		cmdFallback := exec.Command("sh", "-c", `nohup /tmp/depwise_update.sh > /dev/null 2>&1 &`)
 		return cmdFallback.Start()
 	}
 	
