@@ -436,10 +436,31 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 	res += "━━━━━━━━━━━━━━\n"
 
 	if dataFinal.CloudflareDomain != "" {
-		res += "🚀 <b>PAYLOAD CLOUDFLARE</b>\n"
-		res += fmt.Sprintf("<code>GET / HTTP/1.1[crlf]Host: %s[crlf]Upgrade: websocket[crlf]Connection: Keep-Alive[crlf][crlf]</code>\n\n", dataFinal.CloudflareDomain)
-		res += "🛠 <b>HTTP CUSTOM (Copia y Pega)</b>\n"
-		res += fmt.Sprintf("<code>%s:80@%s:%s</code>\n", dataFinal.CloudflareDomain, user, pass)
+		domain := dataFinal.CloudflareDomain
+		res += "🚀 <b>PAYLOADS AVANZADOS CLOUDFLARE</b>\n"
+		
+		res += "<b>1. Normal WS (Puerto 80)</b>\n"
+		res += fmt.Sprintf("<code>GET / HTTP/1.1[crlf]Host: %s[crlf]Upgrade: websocket[crlf]Connection: Keep-Alive[crlf][crlf]</code>\n\n", domain)
+		
+		res += "<b>2. WSS / TLS (Puerto 443 SNI)</b>\n"
+		res += fmt.Sprintf("<code>GET wss://%s/ HTTP/1.1[crlf]Host: %s[crlf]Upgrade: websocket[crlf]Connection: Keep-Alive[crlf][crlf]</code>\n\n", domain, domain)
+		
+		res += "<b>3. HTTP Injector (Modo SNI / Payload)</b>\n"
+		res += fmt.Sprintf("<code>[method] [host_port] HTTP/1.1[crlf]Host: %s[crlf]Upgrade: websocket[crlf]Connection: Keep-Alive[crlf][crlf]</code>\n\n", domain)
+
+		res += "🛠 <b>HTTP CUSTOM (Copiar y Pegar)</b>\n"
+		res += fmt.Sprintf("• WS HTTP: <code>%s:80@%s:%s</code>\n", domain, user, pass)
+		
+		if dataFinal.SSLTunnel != "" {
+			res += fmt.Sprintf("• WSS (TLS/SSL): <code>%s:443@%s:%s</code>\n", domain, user, pass)
+		}
+		
+		if dataFinal.Dropbear != "" {
+			dpPort := strings.Split(dataFinal.Dropbear, ",")[0]
+			dpPort = strings.TrimSpace(dpPort)
+			res += fmt.Sprintf("• Dropbear: <code>%s:%s@%s:%s</code>\n", domain, dpPort, user, pass)
+		}
+		
 		res += "━━━━━━━━━━━━━━\n"
 	}
 
