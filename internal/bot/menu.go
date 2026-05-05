@@ -519,7 +519,7 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 }
 
 func buildMainMenuText(data *db.ConfigData) string {
-	texto := "💎 <b>BOT TELEGRAM DEPWISE V6.7 (GO EDITION)</b>\n"
+	texto := "💎 <b>BOT TELEGRAM DEPWISE V7.4 (GO EDITION)</b>\n"
 	texto += "<i>Panel de Control Avanzado</i>\n\n"
 
 	stats := sys.GetSystemStats()
