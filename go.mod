@@ -1,6 +1,6 @@
 module github.com/Depwisescript/BOT-TELEGRAM-VPN
 
-go 1.25.0
+go 1.25.0 
 
 require gopkg.in/telebot.v3 v3.2.1
 
