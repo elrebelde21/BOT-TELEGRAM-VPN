@@ -494,11 +494,9 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 			"Este bot está configurado para uso exclusivo de administradores.\n\n" +
 			"🚀 <b>¿BUSCAS UN SERVIDOR PREMIUM?</b>\n" +
 			"Adquiere servidores estables y de alta velocidad para tus conexiones.\n\n" +
-			"🛠️ <b>¿NECESITAS UN SCRIPT A MEDIDA?</b>\n" +
-			"Desarrollamos bots y herramientas personalizadas para tu proyecto.\n" +
 			"━━━━━━━━━━━━━━\n" +
-			"📢 <b>Canal Oficial:</b> @Depwise2\n" +
-			"👤 <b>Soporte / Compras:</b> @Dan3651"
+			"📢 <b>Canal Oficial:</b> @mitzukiofc\n" +
+			"👤 <b>Soporte / Compras:</b> @chinitaa14"
 
 		if c.Callback() != nil {
 			return c.Edit(textoDenegado, tele.ModeHTML)
@@ -525,7 +523,7 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 }
 
 func buildMainMenuText(data *db.ConfigData) string {
-	texto := "💎 <b>BOT TELEGRAM DEPWISE V7.7 (GO EDITION)</b>\n"
+	texto := "💎 <b>BOT TELEGRAM V1.0.0 (GO EDITION)</b>\n"
 	texto += "<i>Panel de Control Avanzado</i>\n\n"
 
 	stats := sys.GetSystemStats()
