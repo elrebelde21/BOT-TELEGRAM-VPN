@@ -490,13 +490,31 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 
 	// Comprobar Acceso Público
 	if !data.PublicAccess && !isAdmin(chatID) {
-		textoDenegado := "🔒 <b>SISTEMA PRIVADO</b>\n\n" +
-			"Este bot está configurado para uso exclusivo de administradores.\n\n" +
-			"🚀 <b>¿BUSCAS UN SERVIDOR PREMIUM?</b>\n" +
-			"Adquiere servidores estables y de alta velocidad para tus conexiones.\n\n" +
-			"━━━━━━━━━━━━━━\n" +
-			"📢 <b>Canal Oficial:</b> @mitzukiofc\n" +
-			"👤 <b>Soporte / Compras:</b> @chinitaa14"
+		textoDenegado := `
+🔒 <b>ACCESO RESTRINGIDO</b>
+
+Este sistema actualmente solo está disponible para usuarios premium.
+
+Si buscas acceso a servidores premium, configuraciones de internet o herramientas exclusivas, puedes utilizar nuestros otros bots oficiales.
+
+━━━━━━━━━━━━━━
+🤖 <b>BOTS DISPONIBLES</b>
+
+🧪 @Network_it_free_bot
+Bot gratuito para pruebas y configs básicas.
+
+👑 @NetworkVIP2026_bot
+Servidores premium, acceso VIP y configuraciones exclusivas.
+
+🕵️ @CGD404_bot
+Bot de consultas y herramientas avanzadas multi-país.
+
+━━━━━━━━━━━━━━
+📢 <b>Canal Oficial:</b>
+@mitzukiofc
+
+👤 <b>Soporte / Compras:</b>
+@chinitaa14`
 
 		if c.Callback() != nil {
 			return c.Edit(textoDenegado, tele.ModeHTML)
@@ -523,7 +541,7 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 }
 
 func buildMainMenuText(data *db.ConfigData) string {
-	texto := "💎 <b>BOT TELEGRAM V1.0.0 (GO EDITION)</b>\n"
+	texto := "💎 <b>BOT TELEGRAM V1.0.0 (NETWORK VIP)</b>\n"
 	texto += "<i>Panel de Control Avanzado</i>\n\n"
 
 	stats := sys.GetSystemStats()
