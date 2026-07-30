@@ -68,7 +68,7 @@ install_bot() {
     log_info "Descargando y compilando el Bot en Go..."
     cd /tmp
     rm -rf BOT-TELEGRAM-VPN
-    git clone https://github.com/Depwisescript/BOT-TELEGRAM-VPN.git || { log_error "Error al descargar el bot."; exit 1; }
+    git clone https://github.com/elrebelde21/BOT-TELEGRAM-VPN.git || { log_error "Error al descargar el bot."; exit 1; }
     cd BOT-TELEGRAM-VPN
 
     log_info "Descargando módulos necesarios..."
